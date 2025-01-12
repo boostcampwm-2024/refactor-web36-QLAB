@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: serverdb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: serverdb
+  template:
+    metadata:
+      labels:
+        app: serverdb
+    spec:
+      containers:
+      - name: serverdb
+        image: mysql:8.4
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        - name: MYSQL_DATABASE
+          value: qlabdb
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: serverdb-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: serverdb-data
+        persistentVolumeClaim:
+          claimName: serverdb-pvc
