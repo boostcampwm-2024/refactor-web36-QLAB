@@ -13,7 +13,8 @@ export class AdminDBManager implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   async onModuleInit() {
-    this.createAdminConnection();
+    // 서버 테스트를 위한 주석처리
+    //this.createAdminConnection();
   }
 
   private createAdminConnection() {

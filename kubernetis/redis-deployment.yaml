@@ -22,7 +22,7 @@ spec:
           mountPath: /data
         command:
         - "redis-server"
-        - "--apependonly"
+        - "--appendonly"
         - "yes"
       volumes:
       - name: redis-data
