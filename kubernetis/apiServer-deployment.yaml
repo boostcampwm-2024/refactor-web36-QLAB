@@ -27,7 +27,10 @@ spec:
         - name: DB_USERNAME
           value: 'root'
         - name: DB_PASSWORD
-          value: 'rootpassword'
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: db-password
         - name: DB_DATABASE
           value: 'qlabdb'
         
@@ -36,4 +39,7 @@ spec:
         - name: REDIS_PORT
           value: '6379' 
         - name: SESSION_SECRET
-          value: 'session-secret'
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: sesson-secret
