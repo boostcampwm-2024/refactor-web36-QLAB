@@ -5,25 +5,38 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RedisService {
-  private defaultConnection: Redis;
+  private sessionConnection: Redis;
   private eventConnection: Redis;
+  private activeUserConnection: Redis;
+
+  private readonly SESSION_TTL = 60 * 30;
+  private readonly ACTIVE_USER_TTL = 60 * 5;
 
   constructor(
     private readonly adminDBManager: AdminDBManager,
     private readonly configService: ConfigService,
   ) {
-    this.setDefaultConnection();
+    this.setSessionConnection();
     this.setEventConnection();
   }
 
-  private setDefaultConnection() {
-    this.defaultConnection = new Redis({
+  private setSessionConnection() {
+    this.sessionConnection = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_SESSION'),
     });
 
-    this.defaultConnection.on('ready', () => {
-      this.defaultConnection.config('SET', 'notify-keyspace-events', 'Exg');
+    this.sessionConnection.on('ready', () => {
+      this.sessionConnection.config('SET', 'notify-keyspace-events', 'Exg');
+    });
+  }
+
+  private setActiveUserConnection() {
+    this.activeUserConnection = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_ACTIVE_USER'),
     });
   }
 
@@ -42,28 +55,24 @@ export class RedisService {
     if (!key) {
       return null;
     }
-    return this.defaultConnection.hgetall(key);
+    return this.sessionConnection.hgetall(key);
   }
 
   public async existSession(key: string) {
-    return this.defaultConnection.exists(key);
+    return this.sessionConnection.exists(key);
   }
 
   public async setNewSession(key: string) {
     const session = await this.existSession(key);
     if (!session) {
-      await this.defaultConnection.hset(key, 'rowCount', 0);
+      await this.sessionConnection.hset(key, 'rowCount', 0);
       await this.adminDBManager.initUserDatabase(key);
     }
-    await this.setExpireTime(key, 60 * 60);
+    await this.sessionConnection.expire(key, this.SESSION_TTL);
   }
 
   public async deleteSession(key: string) {
-    await this.defaultConnection.del(key);
-  }
-
-  public async setExpireTime(key: string, ttl: number) {
-    await this.defaultConnection.expire(key, ttl);
+    await this.sessionConnection.del(key);
   }
 
   private subscribeToExpiredEvents() {
@@ -75,10 +84,14 @@ export class RedisService {
   }
 
   public async getRowCount(key: string) {
-    return this.defaultConnection.hget(key, 'rowCount');
+    return this.sessionConnection.hget(key, 'rowCount');
   }
 
   public async setRowCount(key: string, rowCount: number) {
-    await this.defaultConnection.hset(key, 'rowCount', rowCount);
+    await this.sessionConnection.hset(key, 'rowCount', rowCount);
+  }
+
+  public async setActiveUser(key: string) {
+    this.activeUserConnection.expire(key, this.ACTIVE_USER_TTL);
   }
 }
