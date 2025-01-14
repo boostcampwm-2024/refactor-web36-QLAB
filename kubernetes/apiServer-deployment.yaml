@@ -42,4 +42,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: qlab-secret
-              key: sesson-secret
+              key: session-secret
