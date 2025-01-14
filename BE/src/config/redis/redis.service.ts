@@ -18,6 +18,7 @@ export class RedisService {
   ) {
     this.setSessionConnection();
     this.setEventConnection();
+    this.setActiveUserConnection();
   }
 
   private setSessionConnection() {
