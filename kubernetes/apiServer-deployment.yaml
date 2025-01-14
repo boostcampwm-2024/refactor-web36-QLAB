@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: apiserver
-        image: hoon317/qlab-apiserver:latest
+        image: local-qlab-apiserver:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 3000
         env:
@@ -34,6 +35,18 @@ spec:
         - name: DB_DATABASE
           value: 'qlabdb'
         
+        - name: QUERY_DB_TYPE
+          value: 'mysql'
+        - name: QUERY_DB_PORT
+          value: '3306'
+        - name: QUERY_DB_USER
+          value: 'root'
+        - name: QUERY_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: querydb-password
+
         - name: REDIS_HOST
           value: 'redis-service.default'
         - name: REDIS_PORT

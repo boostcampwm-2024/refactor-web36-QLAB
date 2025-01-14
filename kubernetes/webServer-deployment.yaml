@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
       - name: webserver
-        image: hoon317/qlab-webserver:latest
+        image: local-qlab-webserver:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 80
