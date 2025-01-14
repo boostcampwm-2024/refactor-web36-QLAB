@@ -1,11 +1,13 @@
-import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
+import { Controller, Delete, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
 import { KubernetesService } from './K8S/KubernetesService';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService,
-    private readonly kubernetesService: KubernetesService) {}
+  constructor(
+    private readonly appService: AppService,
+    private readonly kubernetesService: KubernetesService,
+  ) {}
 
   @Get()
   getHello(): string {

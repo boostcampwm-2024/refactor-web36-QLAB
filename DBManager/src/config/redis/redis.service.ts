@@ -4,32 +4,49 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RedisService {
-  private readonly redisClient: Redis;
+  private readonly sessionConnection: Redis;
+  private readonly podConnection: Redis;
+  private readonly activeUserSubscriber: Redis;
 
   constructor(private readonly configService: ConfigService) {
-    this.redisClient = new Redis({
+    this.sessionConnection = new Redis({
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_SESSION'),
+    });
+
+    this.podConnection = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_POD'),
+    });
+
+    this.activeUserSubscriber = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_ACTIVE_USER'),
     });
   }
 
-  async set(key: string, value: string, ttl?: number): Promise<void> {
-    if (ttl) {
-      await this.redisClient.set(key, value, 'EX', ttl);
-    } else {
-      await this.redisClient.set(key, value);
-    }
+  async hgetSession(key: string, field: string): Promise<string | null> {
+    return this.sessionConnection.hget(key, field);
   }
 
-  async get(key: string): Promise<string | null> {
-    return this.redisClient.get(key);
+  async hgetPod(key: string, field: string): Promise<string | null> {
+    return this.podConnection.hget(key, field);
   }
 
-  async del(key: string): Promise<number> {
-    return this.redisClient.del(key);
+  async hsetPod(key: string, field: string, value: number): Promise<void> {
+    await this.podConnection.hset(key, field, value);
   }
 
-  async exists(key: string): Promise<number> {
-    return this.redisClient.exists(key);
+  async subscribeActiveUser(
+    channel: string,
+    onMessage: (message: string) => void,
+  ): Promise<void> {
+    await this.activeUserSubscriber.subscribe(channel);
+    this.activeUserSubscriber.on('message', (_, message) => {
+      onMessage(message);
+    });
   }
 }

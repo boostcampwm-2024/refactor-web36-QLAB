@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { KubernetesService } from './K8S/KubernetesService';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+  ],
   controllers: [AppController],
-  providers: [AppService, KubernetesService],
+  providers: [KubernetesService],
 })
 export class AppModule {}
