@@ -1,8 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as k8s from '@kubernetes/client-node';
 
 @Injectable()
-export class KubernetesService implements OnModuleInit {
+export class K8SApiService {
   private podCnt = 0;
   private k8sApi;
   private k8sWatch : k8s.Watch;
