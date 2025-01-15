@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apiserver-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apiserver
+  template:
+    metadata:
+      labels:
+        app: apiserver
+    spec:
+      containers:
+      - name: apiserver
+        image: local-qlab-apiserver:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_TYPE
+          value: 'mysql'
+        - name: DB_HOST
+          value: 'serverdb-service.default'
+        - name: DB_PORT
+          value: '3306'
+        - name: DB_USERNAME
+          value: 'root'
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: db-password
+        - name: DB_DATABASE
+          value: 'qlabdb'
+        
+        - name: QUERY_DB_TYPE
+          value: 'mysql'
+        - name: QUERY_DB_PORT
+          value: '3306'
+        - name: QUERY_DB_USER
+          value: 'root'
+        - name: QUERY_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: querydb-password
+
+        - name: REDIS_HOST
+          value: 'redis-service.default'
+        - name: REDIS_PORT
+          value: '6379' 
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: session-secret

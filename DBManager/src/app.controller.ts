@@ -1,16 +1,9 @@
 import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
-import { AppService } from './app.service';
 import { K8SApiService } from './K8SApi/K8SApi.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService,
-    private readonly k8SApiService: K8SApiService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
+  constructor(private readonly k8SApiService: K8SApiService) {}
 
   @Get('/pods')
   async getAllPods() {
