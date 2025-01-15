@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import * as k8s from '@kubernetes/client-node';
+import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
 
 @Injectable()
 export class KubernetesService implements OnModuleInit {
@@ -8,9 +8,9 @@ export class KubernetesService implements OnModuleInit {
   private namespace = 'default';
 
   async onModuleInit() {
-    const kc = new k8s.KubeConfig();
+    const kc = new KubeConfig();
     kc.loadFromDefault();
-    this.k8sApi = kc.makeApiClient(k8s.CoreV1Api);
+    this.k8sApi = kc.makeApiClient(CoreV1Api);
   }
 
   async createPod() {
@@ -46,14 +46,16 @@ export class KubernetesService implements OnModuleInit {
   }
 
   async getAllPods() {
-    const allPodInfos = await this.k8sApi.listNamespacedPod({ namespace: this.namespace });
+    const allPodInfos = await this.k8sApi.listNamespacedPod({
+      namespace: this.namespace,
+    });
 
     const podNameList = [];
-    allPodInfos.items.forEach(item => {
+    allPodInfos.items.forEach((item) => {
       podNameList.push(item.metadata.name);
     });
     return {
-      podCnt : podNameList.length,
+      podCnt: podNameList.length,
       podNameList,
     };
   }

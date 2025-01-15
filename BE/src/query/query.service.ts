@@ -6,6 +6,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { UsageService } from 'src/usage/usage.service';
+import { RedisService } from '../config/redis/redis.service';
 
 @Injectable()
 export class QueryService {
@@ -13,9 +14,11 @@ export class QueryService {
     private readonly userDBManager: UserDBManager,
     private shellService: ShellService,
     private readonly usageService: UsageService,
+    private readonly redisService: RedisService,
   ) {}
 
   async execute(req: any, shellId: number, queryDto: QueryDto) {
+    this.redisService.setActiveUser(req.sessionID);
     await this.shellService.findShellOrThrow(shellId);
 
     const baseUpdateData = {
