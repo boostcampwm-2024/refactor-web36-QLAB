@@ -1,5 +1,5 @@
 import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
-import { K8SApiService } from './K8SApi/K8SApi.service';
+import { K8SApiService } from './k8s/K8SApi.service';
 
 @Controller()
 export class AppController {
