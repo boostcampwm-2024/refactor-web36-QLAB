@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import * as k8s from '@kubernetes/client-node';
+import { RedisService } from 'src/config/redis/redis.service';
 
 @Injectable()
 export class K8SApiService {
@@ -7,6 +8,8 @@ export class K8SApiService {
   private k8sApi;
   private k8sWatch : k8s.Watch;
   private namespace = 'default';
+
+  constructor(private readonly redisService: RedisService) {}
 
   async onModuleInit() {
     const kc = new k8s.KubeConfig();
@@ -21,18 +24,15 @@ export class K8SApiService {
     const queryParams = { allowWatchBookmarks: true };
     const handlePodEvent = (type : String, apiObj: any, watchObj: any) => {
       if (type === 'ADDED') {
-          console.log('Watch Created Pod');
-          console.log(watchObj.object.metadata.name);
+          const createdPod = watchObj.object.metadata.name;
+          this.redisService.hsetPod(createdPod, 'activeUser', 0);
       } else if (type === 'DELETED') {
-          console.log('Watch Deleted Pod');
-          console.log(watchObj.object.metadata.name);
+          const deletedPod = watchObj.object.metadata.name;
+          this.redisService.delPod(deletedPod);
       }
     };
-    const handleError = (err: any) => {
-      console.log(err);
-    };
 
-    const req = this.k8sWatch.watch(path, queryParams, handlePodEvent, handleError);
+    this.k8sWatch.watch(path, queryParams, handlePodEvent, err => {});
   }
 
   async createPod() {
@@ -51,13 +51,11 @@ export class K8SApiService {
     };
 
     const createdPod = await this.k8sApi.createNamespacedPod(this.namespace, mysqlPod);
-    // console.log('Created pod:', createdPod.body.metadata.name);
     return createdPod;
   }
 
   async deletePod(podName: string) {
     const deletePod = await this.k8sApi.deleteNamespacedPod(podName, this.namespace);
-    // console.log('Deleted pod:', deletePod.body.metadata.name);
     return deletePod;
   }
 
