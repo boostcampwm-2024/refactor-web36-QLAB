@@ -3,18 +3,9 @@ kind: Deployment
 metadata:
   name: webserver-deployment
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: webserver
   template:
-    metadata:
-      labels:
-        app: webserver
     spec:
       containers:
       - name: webserver
         image: local-qlab-webserver:latest
         imagePullPolicy: Never
-        ports:
-        - containerPort: 80
