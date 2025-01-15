@@ -18,27 +18,38 @@ export class K8SApiService {
     this.k8sWatch = new k8s.Watch(kc);
     this.startWatchPod();
   }
+  
+  async getPodIp(podName: string): Promise<string> {
+    const podInfo = await this.k8sApi.readNamespacedPod(podName, this.namespace);
+    return podInfo.body.status.podIP || 'Pending';
+  }
 
   startWatchPod() {
     const path = `/api/v1/namespaces/${this.namespace}/pods`;
     const queryParams = { allowWatchBookmarks: true };
-    const handlePodEvent = (type : String, apiObj: any, watchObj: any) => {
+    const handlePodEvent = async (type : String, apiObj: any, watchObj: any) => {
       if (type === 'ADDED') {
           const createdPod = watchObj.object.metadata.name;
-          this.redisService.hsetPod(createdPod, 'activeUser', 0);
+          const podIp = await this.getPodIp(createdPod);
+
+          await this.redisService.hsetPod(createdPod, 'activeUser', 0);
+          //TODO ip가 바로 생성되지 않는 문제 해결 필요
+          await this.redisService.hsetPod(createdPod, 'podIp', podIp);
       } else if (type === 'DELETED') {
           const deletedPod = watchObj.object.metadata.name;
-          this.redisService.delPod(deletedPod);
+          await this.redisService.delPod(deletedPod);
       }
     };
+    
 
     this.k8sWatch.watch(path, queryParams, handlePodEvent, err => {});
   }
 
   async createPod() {
+    const podName = `mysql-pod${this.podCnt++}`;
     const mysqlPod = {
       metadata: {
-        name: `mysql-pod${this.podCnt++}`,
+        name: podName,
       },
       spec: {
         containers: [
@@ -60,14 +71,22 @@ export class K8SApiService {
   }
 
   async getAllPods() {
-    const allPodInfos = await this.k8sApi.listNamespacedPod(this.namespace);
-    const podNameList = [];
-    allPodInfos.body.items.forEach(item => {
-      podNameList.push(item.metadata.name);
-    });
+    const podList = await this.k8sApi.listNamespacedPod(this.namespace);
+    const podResult = {};
+
+    for (const pod of podList.body.items) {
+      const podName = pod.metadata.name;
+      console.log(podName);
+  
+      const podInfo = await this.k8sApi.readNamespacedPod(podName, this.namespace);
+      const podIp = podInfo.body.status.podIP;
+      console.log(podIp);
+  
+      podResult[podName] = podIp;
+    }
     return {
-      podCnt : podNameList.length,
-      podNameList,
+      podCnt : Object.keys(podResult).length,
+      podResult,
     };
   }
 }
