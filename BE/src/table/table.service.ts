@@ -1,136 +1,62 @@
 import { Injectable } from '@nestjs/common';
+import { UserDBManager } from '../config/query-database/user-db-manager.service';
+import { Connection, RowDataPacket } from 'mysql2/promise';
 import { ColumnDto, ResTableDto } from './dto/res-table.dto';
 import { ResTablesDto } from './dto/res-tables.dto';
-import { AdminDBManager } from '../config/query-database/admin-db-manager.service';
 
 @Injectable()
 export class TableService {
-  constructor(private readonly adminDBManager: AdminDBManager) {}
+  constructor(private readonly userDBManager: UserDBManager) {}
 
-  async findAll(sessionId: string) {
-    const tables = await this.getTables(sessionId);
-    const columns = await this.getColumns(sessionId);
-    const foreignKeys = await this.getForeignKeys(sessionId);
-    const indexes = await this.getIndexes(sessionId);
+  async findAll(connection: Connection, sessionId: string) {
+    const tables = await this.getTables(connection, sessionId);
 
-    return new ResTablesDto(
-      this.mapTablesWithColumnsAndKeys(tables, columns, foreignKeys, indexes),
+    const tableList: ResTableDto[] = [];
+    for (const tableName of tables) {
+      const columnDtos = await this.getColumns(connection, tableName);
+      const resTableDto = new ResTableDto(tableName, columnDtos);
+      tableList.push(resTableDto);
+    }
+    return new ResTablesDto(tableList);
+  }
+
+  async find(connection: Connection, tableName: string) {
+    const columns = await this.getColumns(connection, tableName);
+    return new ResTableDto(tableName, columns);
+  }
+
+  async getTables(
+    connection: Connection,
+    sessionId: string,
+  ): Promise<string[]> {
+    const query = `SHOW TABLES`;
+    const result = (await this.userDBManager.run(
+      connection,
+      query,
+    )) as RowDataPacket[];
+
+    const schema = sessionId.substring(0, 10);
+    const key = `Tables_in_${schema}`;
+
+    return result.map((row) => row[key]);
+  }
+
+  async getColumns(connection: Connection, tableName: string) {
+    const query = `SHOW FULL COLUMNS FROM ${tableName}`;
+    const result = (await this.userDBManager.run(
+      connection,
+      query,
+    )) as RowDataPacket[];
+    return result.map(
+      (row) =>
+        new ColumnDto({
+          name: row.Field,
+          type: row.Type,
+          PK: row.Key === 'PRI',
+          UQ: row.Key === 'UNI',
+          AI: row.Extra.includes('auto_increment'),
+          NN: row.Null !== 'YES',
+        }),
     );
-  }
-
-  async find(sessionId: string, tableName: string): Promise<ResTableDto | []> {
-    const tables = await this.getTables(sessionId, tableName);
-    const columns = await this.getColumns(sessionId, tableName);
-    const foreignKeys = await this.getForeignKeys(sessionId, tableName);
-    const indexes = await this.getIndexes(sessionId);
-
-    return (
-      this.mapTablesWithColumnsAndKeys(
-        tables,
-        columns,
-        foreignKeys,
-        indexes,
-      )[0] || []
-    );
-  }
-
-  async getTables(identify: string, tableName?: string) {
-    const schema = identify.substring(0, 10);
-    const query = `
-    SELECT TABLE_NAME
-    FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_SCHEMA = ? ${tableName ? 'AND TABLE_NAME = ?' : ''}
-  `;
-    const params = tableName ? [schema, tableName] : [schema];
-    const [tables] = await this.adminDBManager.run(query, params);
-    return tables as any[];
-  }
-
-  async getColumns(identify: string, tableName?: string) {
-    const schema = identify.substring(0, 10);
-    const query = `
-    SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, COLUMN_KEY, EXTRA, IS_NULLABLE
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = ? ${tableName ? 'AND TABLE_NAME = ?' : ''}
-    ORDER BY ORDINAL_POSITION
-  `;
-    const params = tableName ? [schema, tableName] : [schema];
-    const [columns] = await this.adminDBManager.run(query, params);
-    return columns as any[];
-  }
-
-  private async getForeignKeys(identify: string, tableName?: string) {
-    const schema = identify.substring(0, 10);
-    const query = `
-    SELECT 
-      TABLE_NAME, 
-      COLUMN_NAME, 
-      REFERENCED_TABLE_NAME, 
-      REFERENCED_COLUMN_NAME
-    FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-    WHERE TABLE_SCHEMA = ? 
-    ${tableName ? 'AND TABLE_NAME = ?' : ''} 
-    AND REFERENCED_TABLE_NAME IS NOT NULL
-  `;
-    const params = tableName ? [schema, tableName] : [schema];
-    const [foreignKey] = await this.adminDBManager.run(query, params);
-    return foreignKey as any[];
-  }
-
-  private async getIndexes(identify: string, tableName?: string) {
-    const schema = identify.substring(0, 10);
-    const query = `
-    SELECT TABLE_NAME, COLUMN_NAME, INDEX_NAME, NON_UNIQUE
-    FROM INFORMATION_SCHEMA.STATISTICS
-    WHERE TABLE_SCHEMA = ? ${tableName ? 'AND TABLE_NAME = ?' : ''}
-  `;
-    const params = tableName ? [schema, tableName] : [schema];
-    const [indexes] = await this.adminDBManager.run(query, params);
-    return indexes as any[];
-  }
-
-  private mapTablesWithColumnsAndKeys(
-    tables: any[],
-    columns: any[],
-    foreignKeys: any[],
-    indexes: any[],
-  ): ResTableDto[] {
-    return tables.map((table) => {
-      const tableColumns = columns.filter(
-        (col) => col.TABLE_NAME === table.TABLE_NAME,
-      );
-
-      const columnDtos = tableColumns.map((col) => {
-        const fk = foreignKeys.find(
-          (key) =>
-            key.TABLE_NAME === col.TABLE_NAME &&
-            key.COLUMN_NAME === col.COLUMN_NAME,
-        );
-
-        const hasIndex = indexes.some(
-          (idx) =>
-            idx.TABLE_NAME === col.TABLE_NAME &&
-            idx.COLUMN_NAME === col.COLUMN_NAME,
-        );
-
-        return new ColumnDto({
-          name: col.COLUMN_NAME,
-          type: col.COLUMN_TYPE,
-          PK: col.COLUMN_KEY === 'PRI',
-          FK: fk
-            ? `${fk.REFERENCED_TABLE_NAME}.${fk.REFERENCED_COLUMN_NAME}`
-            : null,
-          UQ: col.COLUMN_KEY === 'UNI',
-          AI: col.EXTRA.includes('auto_increment'),
-          NN: col.IS_NULLABLE === 'NO',
-          IDX: hasIndex,
-        });
-      });
-
-      return new ResTableDto({
-        tableName: table.TABLE_NAME || null,
-        columns: columnDtos || null,
-      });
-    });
   }
 }

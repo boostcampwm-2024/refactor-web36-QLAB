@@ -26,7 +26,6 @@ export interface TableColumnType {
   type: string
   FK: string | null
   PK: boolean
-  IDX: boolean
   UQ: boolean
   AI: boolean
   NN: boolean

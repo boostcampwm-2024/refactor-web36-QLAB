@@ -7,8 +7,8 @@ import { ResRecordDto } from './dto/res-record.dto';
 import { ExecuteRecordSwagger } from '../config/swagger/record-swagger.decorator';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { UserDBConnectionInterceptor } from '../interceptors/user-db-connection.interceptor';
-import { Request } from 'express';
 
+@UseInterceptors(UserDBConnectionInterceptor)
 @ApiExtraModels(ResponseDto, ResRecordDto)
 @ApiTags('랜덤 데이터 생성 API')
 @Controller('api/record')
@@ -20,10 +20,13 @@ export class RecordController {
   @Serialize(ResRecordDto)
   @Post()
   async insertRandomRecord(
-    @Req() req: Request,
+    @Req() req: any,
     @Body() randomRecordInsertDto: CreateRandomRecordDto,
   ) {
-    await this.recordService.validateDto(randomRecordInsertDto, req.sessionID);
+    await this.recordService.validateDto(
+      randomRecordInsertDto,
+      req.dbConnection,
+    );
     return this.recordService.insertRandomRecord(req, randomRecordInsertDto);
   }
 }

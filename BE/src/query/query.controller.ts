@@ -30,10 +30,15 @@ export class QueryController {
   @Post('/:shellId/execute')
   @UseGuards(ShellGuard)
   async executeQuery(
-    @Req() req: Request,
+    @Req() req: any,
     @Param('shellId') shellId: number,
     @Body() queryDto: QueryDto,
   ) {
-    return await this.queryService.execute(req, shellId, queryDto);
+    return await this.queryService.execute(
+      req.dbConnection,
+      req.sessionID,
+      shellId,
+      queryDto,
+    );
   }
 }

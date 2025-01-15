@@ -7,8 +7,9 @@ export class ResTableDto {
   @Expose()
   columns: ColumnDto[];
 
-  constructor(init?: Partial<ResTableDto>) {
-    Object.assign(this, init);
+  constructor(tableName: string, columns: ColumnDto[]) {
+    this.tableName = tableName;
+    this.columns = columns;
   }
 }
 
@@ -24,9 +25,6 @@ export class ColumnDto {
 
   @Expose()
   FK: string;
-
-  @Expose()
-  IDX: boolean;
 
   @Expose()
   UQ: boolean;

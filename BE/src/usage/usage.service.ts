@@ -22,23 +22,23 @@ export class UsageService {
   }
 
   public async updateRowCount(req: any) {
-    const tableList: string[] = (
-      await this.tableService.getTables(req.sessionID)
-    ).map((table) => table.TABLE_NAME);
-    if (tableList.length === 0) {
-      await this.redisService.setRowCount(req.sessionID, 0);
-      return {
-        currentUsage: 0,
-        availUsage: this.MAX_ROW_COUNT,
-      };
-    }
-    const query = this.createSumQuery(req, tableList);
-    const result = await this.userDBManager.run(req, query);
-    const rowCount = parseInt(result[0].total_rows, 10);
-
-    if (rowCount > this.MAX_ROW_COUNT) throw new DataLimitExceedException();
-
-    await this.redisService.setRowCount(req.sessionID, rowCount);
+    // const tableList: string[] = (
+    //   await this.tableService.getTables(req.sessionID)
+    // ).map((table) => table.TABLE_NAME);
+    // if (tableList.length === 0) {
+    //   await this.redisService.setRowCount(req.sessionID, 0);
+    //   return {
+    //     currentUsage: 0,
+    //     availUsage: this.MAX_ROW_COUNT,
+    //   };
+    // }
+    // const query = this.createSumQuery(req, tableList);
+    // const result = await this.userDBManager.run(req, query);
+    // const rowCount = parseInt(result[0].total_rows, 10);
+    //
+    // if (rowCount > this.MAX_ROW_COUNT) throw new DataLimitExceedException();
+    //
+    // await this.redisService.setRowCount(req.sessionID, rowCount);
   }
 
   private createSumQuery(req: any, tableNameList: string[]): string {
