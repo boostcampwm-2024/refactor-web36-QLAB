@@ -50,28 +50,21 @@ export class KubernetesService implements OnModuleInit {
       },
     };
 
-    const createdPod = await this.k8sApi.createNamespacedPod({
-      namespace: this.namespace,
-      body: mysqlPod,
-    });
-    console.log('Created pod:', createdPod);
+    const createdPod = await this.k8sApi.createNamespacedPod(this.namespace, mysqlPod);
+    // console.log('Created pod:', createdPod.body.metadata.name);
     return createdPod;
   }
 
   async deletePod(podName: string) {
-    const deletePod = await this.k8sApi.deleteNamespacedPod({
-      namespace: this.namespace,
-      name: podName,
-    });
-    console.log('Deleted pod:', deletePod);
+    const deletePod = await this.k8sApi.deleteNamespacedPod(podName, this.namespace);
+    // console.log('Deleted pod:', deletePod.body.metadata.name);
     return deletePod;
   }
 
   async getAllPods() {
-    const allPodInfos = await this.k8sApi.listNamespacedPod({ namespace: this.namespace });
-
+    const allPodInfos = await this.k8sApi.listNamespacedPod(this.namespace);
     const podNameList = [];
-    allPodInfos.items.forEach(item => {
+    allPodInfos.body.items.forEach(item => {
       podNameList.push(item.metadata.name);
     });
     return {
