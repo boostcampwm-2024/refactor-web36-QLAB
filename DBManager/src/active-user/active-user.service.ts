@@ -10,13 +10,12 @@ export class ActiveUserService implements OnModuleInit {
   onModuleInit() {
     this.countUp();
     this.countDown();
-    this.applyToRedis();
   }
 
   private countUp() {
     const channel = '__keyspace@1__:APPEND';
-    this.redisService.subscribeActiveUser(channel, async (sid) => {
-      const pod = await this.redisService.hgetSession(sid, 'pod');
+    this.redisService.subscribeActiveUser(channel, async (sessionId) => {
+      const pod = await this.redisService.hgetSession(sessionId, 'pod');
 
       const currentCount = this.activeUserVariation.get(pod) ?? 0;
       this.activeUserVariation.set(pod, currentCount + 1);
@@ -25,8 +24,8 @@ export class ActiveUserService implements OnModuleInit {
 
   private countDown() {
     const channel = '__keyspace@1__:EXPIRE';
-    this.redisService.subscribeActiveUser(channel, async (sid) => {
-      const pod = await this.redisService.hgetSession(sid, 'pod');
+    this.redisService.subscribeActiveUser(channel, async (sessionId) => {
+      const pod = await this.redisService.hgetSession(sessionId, 'pod');
 
       const currentCount = this.activeUserVariation.get(pod) ?? 0;
       this.activeUserVariation.set(pod, currentCount - 1);
@@ -34,7 +33,7 @@ export class ActiveUserService implements OnModuleInit {
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  private async applyToRedis() {
+  async applyToRedis() {
     for (const [pod, variation] of this.activeUserVariation.entries()) {
       const count = await this.redisService.hgetPod(pod, 'activeUser');
       const newCount = (count ? parseInt(count, 10) : 0) + variation;
