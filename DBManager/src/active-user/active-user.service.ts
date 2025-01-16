@@ -5,7 +5,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 @Injectable()
 export class ActiveUserService implements OnModuleInit {
   private activeUserVariation = new Map<string, number>();
-  private redisService: RedisService;
+  constructor(private readonly redisService: RedisService) {}
 
   onModuleInit() {
     this.countUp();

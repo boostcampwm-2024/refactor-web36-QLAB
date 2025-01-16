@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
-import { UserSessionDBService } from './user-session-db.service';
+import { RedisModule } from '../config/redis/redis.module';
+import { UserDBService } from './user-db.service';
+import { UserDBConnector } from './user-db.connector';
 
 @Module({
-  providers: [UserSessionDBService],
+  imports: [RedisModule],
+  providers: [UserDBService, UserDBConnector],
 })
 export class UserDBModule {}

@@ -1,10 +1,13 @@
 import { RedisService } from '../config/redis/redis.service';
-import { OnModuleInit } from '@nestjs/common';
-import { UserDBConnectionService } from './user-db-connection.service';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { UserDBService } from '../user-db/user-db.service';
 
-export class UserSessionDBService implements OnModuleInit {
-  private redisService: RedisService;
-  private dbService: UserDBConnectionService;
+@Injectable()
+export class SessionEventHandler implements OnModuleInit {
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly userDBService: UserDBService,
+  ) {}
 
   onModuleInit() {
     this.createDB();
@@ -15,7 +18,7 @@ export class UserSessionDBService implements OnModuleInit {
     const channel = '__keyspace@0__:APPEND';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
-      this.dbService.initUserDatabase(pod, sessionId);
+      this.userDBService.initUserDatabase(pod, sessionId);
     });
   }
 
@@ -23,7 +26,7 @@ export class UserSessionDBService implements OnModuleInit {
     const channel = '__keyspace@0__:EXPIRE';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
-      this.dbService.removeDatabase(pod, sessionId);
+      this.userDBService.removeDatabase(pod, sessionId);
     });
   }
 }

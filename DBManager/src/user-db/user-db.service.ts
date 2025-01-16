@@ -1,29 +1,10 @@
+import { UserDBConnector } from './user-db.connector';
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Connection, createConnection } from 'mysql2/promise';
+import * as console from 'node:console';
 
 @Injectable()
-export class UserDBConnectionService {
-  private connectionMap = new Map<string, Connection>();
-
-  constructor(private readonly configService: ConfigService) {}
-
-  private async getConnection(pod: string) {
-    if (!this.connectionMap.has(pod)) {
-      const connection = await this.createConnectionByPod(pod);
-      this.connectionMap.set(pod, connection);
-    }
-    return this.connectionMap.get(pod);
-  }
-
-  private async createConnectionByPod(pod: string) {
-    return createConnection({
-      host: pod,
-      user: this.configService.get<string>('QUERY_DB_USER'),
-      password: this.configService.get<string>('QUERY_DB_PASSWORD'),
-      port: this.configService.get<number>('QUERY_DB_PORT'),
-    });
-  }
+export class UserDBService {
+  constructor(private readonly userDBConnector: UserDBConnector) {}
 
   public async initUserDatabase(pod: string, sessionId: string) {
     try {
@@ -35,7 +16,7 @@ export class UserDBConnectionService {
         database: identify,
       };
 
-      const connection = await this.getConnection(pod);
+      const connection = await this.userDBConnector.getConnection(pod);
 
       await connection.query(`create database ${connectInfo.database};`);
       await connection.query(
@@ -51,7 +32,7 @@ export class UserDBConnectionService {
 
   public async removeDatabase(pod: string, sessionId: string) {
     try {
-      const connection = await this.getConnection(pod);
+      const connection = await this.userDBConnector.getConnection(pod);
 
       const identify = sessionId.substring(0, 10);
 

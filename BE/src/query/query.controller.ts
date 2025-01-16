@@ -13,7 +13,6 @@ import { ResponseDto } from '../common/response/response.dto';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ResQueryDto } from './dto/res-query.dto';
 import { ExecuteQuerySwagger } from '../config/swagger/query-swagger.decorator';
-import { Request } from 'express';
 import { Serialize } from '../interceptors/serialize.interceptor';
 import { ShellGuard } from '../guard/shell.guard';
 import { UserDBConnectionInterceptor } from '../interceptors/user-db-connection.interceptor';
