@@ -3,26 +3,25 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mock } from 'jest-mock-extended';
 import { TableService } from '../../src/table/table.service';
 import { UsageService } from '../../src/usage/usage.service';
-import { ResultSetHeader } from 'mysql2/promise';
 import { FileService } from '../../src/record/file.service';
 import { CreateRandomRecordDto } from '../../src/record/dto/create-random-record.dto';
 import { ResTableDto } from '../../src/table/dto/res-table.dto';
 import { BadRequestException } from '@nestjs/common';
+import { Connection } from 'mysql2/promise';
 
 const TEST_SESSION_ID = 'db12345678';
 
 const mockFileService = mock<FileService>();
 const mockTableService = mock<TableService>();
 const mockUsageService = mock<UsageService>();
+const mockConnection = mock<Connection>();
 
 describe('RecordService', () => {
   let recordService: RecordService;
 
   beforeAll(() => {
     mockFileService.generateCsvFile.mockResolvedValue('/csvTemp/test.csv');
-    mockFileService.insertCsvIntoDB.mockResolvedValue({
-      affectedRows: 1,
-    } as ResultSetHeader);
+    mockFileService.loadCsvToDB.mockResolvedValue(1);
     mockUsageService.getRowCount.mockResolvedValue({
       currentUsage: 1,
       availUsage: 10,
@@ -57,7 +56,11 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.validateDto(TEST_BODY, TEST_SESSION_ID),
+      recordService.insertRandomRecord(
+        mockConnection,
+        TEST_SESSION_ID,
+        TEST_BODY,
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -76,7 +79,11 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.validateDto(TEST_BODY, TEST_SESSION_ID),
+      recordService.insertRandomRecord(
+        mockConnection,
+        TEST_SESSION_ID,
+        TEST_BODY,
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -95,7 +102,11 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.validateDto(TEST_BODY, TEST_SESSION_ID),
+      recordService.insertRandomRecord(
+        mockConnection,
+        TEST_SESSION_ID,
+        TEST_BODY,
+      ),
     ).rejects.toThrow(BadRequestException);
   });
 });

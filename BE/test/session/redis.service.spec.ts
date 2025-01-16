@@ -1,19 +1,16 @@
 import { ConfigService } from '@nestjs/config';
 import { mock, MockProxy } from 'jest-mock-extended';
-import { AdminDBManager } from '../../src/config/query-database/admin-db-manager.service';
 import { RedisService } from '../../src/config/redis/redis.service';
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 
 describe('RedisService', () => {
   let redisService: RedisService;
-  let mockAdminDBManager: MockProxy<AdminDBManager>;
   let mockConfigService: MockProxy<ConfigService>;
   let redisContainer: StartedRedisContainer;
 
   beforeAll(async () => {
     redisContainer = await new RedisContainer().withExposedPorts(6379).start();
 
-    mockAdminDBManager = mock<AdminDBManager>();
     mockConfigService = mock<ConfigService>();
     mockConfigService.get.mockImplementation((key: string) => {
       switch (key) {
@@ -24,16 +21,15 @@ describe('RedisService', () => {
       }
     });
 
-    redisService = new RedisService(mockAdminDBManager, mockConfigService);
+    redisService = new RedisService(mockConfigService);
   });
 
   afterEach(() => {
-    redisService['defaultConnection'].del('testKey');
+    redisService['sessionConnection'].del('testKey');
   });
 
   afterAll(async () => {
-    redisService['defaultConnection'].disconnect();
-    redisService['eventConnection'].disconnect();
+    redisService['sessionConnection'].disconnect();
     await redisContainer.stop();
   });
 
@@ -55,13 +51,13 @@ describe('RedisService', () => {
     // given
     const existingSession = 'testKey';
     await redisService.setNewSession(existingSession);
-    const keyCountBefore = redisService['defaultConnection'].get('*');
+    const keyCountBefore = redisService['sessionConnection'].get('*');
 
     // when
     await redisService.setNewSession(existingSession);
 
     // then
-    const keyCountAfter = redisService['defaultConnection'].get('*');
+    const keyCountAfter = redisService['sessionConnection'].get('*');
     expect(keyCountAfter).toEqual(keyCountBefore);
   });
 
@@ -75,18 +71,5 @@ describe('RedisService', () => {
 
     // then
     expect(session).not.toBeNull();
-  });
-
-  it('세션 만료 시, AdminDBManager의 removeDatabaseInfo 메서드가 호출된다.', async () => {
-    // given
-    const mockKey = 'testKey';
-    await redisService.setNewSession(mockKey);
-    await redisService.setExpireTime(mockKey, 1);
-
-    // when
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    // then
-    expect(mockAdminDBManager.removeDatabaseInfo).toHaveBeenCalledWith(mockKey);
   });
 });

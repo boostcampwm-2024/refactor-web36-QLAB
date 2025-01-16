@@ -11,7 +11,7 @@ import {
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { RandomColumnModel } from './random-column.entity';
 import * as path from 'node:path';
-import { ResultSetHeader } from 'mysql2/promise';
+import { Connection, ResultSetHeader } from 'mysql2/promise';
 import * as crypto from 'node:crypto';
 @Injectable()
 export class FileService implements OnModuleInit {
@@ -55,7 +55,7 @@ export class FileService implements OnModuleInit {
   }
 
   async loadCsvToDB(
-    req: any,
+    connection: Connection,
     csvFilePath: string,
     tableName: string,
     columnNames: string[],
@@ -71,7 +71,7 @@ export class FileService implements OnModuleInit {
 
     try {
       queryResult = (await this.userDBManager.run(
-        req,
+        connection,
         query,
       )) as ResultSetHeader;
       return queryResult.affectedRows;

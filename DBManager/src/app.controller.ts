@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
+import { Controller, Delete, Get, Query } from '@nestjs/common';
 import { K8SApiService } from './k8s/K8SApi.service';
 
 @Controller()
@@ -7,20 +7,16 @@ export class AppController {
 
   @Get('/pods')
   async getAllPods() {
-    const pods = await this.k8SApiService.getAllPods();
-    return pods;
+    return await this.k8SApiService.getAllPods();
   }
 
   @Get('/create-pod')
   async createPod() {
-    const pod = await this.k8SApiService.createPod();
-    return pod;
+    return await this.k8SApiService.createPod();
   }
 
   @Delete('/delete-pod')
   async deletePod(@Query('podName') podName: string) {
-    console.log(podName);
-    const pod = await this.k8SApiService.deletePod(podName);
-    return pod;
+    return await this.k8SApiService.deletePod(podName);
   }
 }

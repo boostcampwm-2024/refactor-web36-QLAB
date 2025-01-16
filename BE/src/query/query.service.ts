@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { QueryDto } from './dto/query.dto';
 import { QueryType } from '../common/enums/query-type.enum';
 import { ShellService } from '../shell/shell.service';
-import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { UsageService } from 'src/usage/usage.service';
@@ -17,12 +17,17 @@ export class QueryService {
     private readonly redisService: RedisService,
   ) {}
 
-  async execute(req: any, shellId: number, queryDto: QueryDto) {
-    this.redisService.setActiveUser(req.sessionID);
+  async execute(
+    connection: Connection,
+    sessionId: string,
+    shellId: number,
+    queryDto: QueryDto,
+  ) {
+    this.redisService.setActiveUser(sessionId);
     await this.shellService.findShellOrThrow(shellId);
 
     const baseUpdateData = {
-      sessionId: req.sessionID,
+      sessionId: sessionId,
       query: queryDto.query,
       queryType: this.detectQueryType(queryDto.query),
     };
@@ -35,7 +40,11 @@ export class QueryService {
           text: '지원하지 않는 쿼리입니다.',
         });
       }
-      updateData = await this.processQuery(req, baseUpdateData, queryDto.query);
+      updateData = await this.processQuery(
+        connection,
+        baseUpdateData,
+        queryDto.query,
+      );
     } catch (e) {
       const text = `ERROR ${e.errno || ''} (${e.sqlState || ''}): ${e.sqlMessage || ''}`;
 
@@ -47,21 +56,19 @@ export class QueryService {
       };
       return await this.shellService.replace(shellId, updateData);
     }
-    await this.usageService.updateRowCount(req);
+    await this.usageService.updateRowCount(connection, sessionId);
     return await this.shellService.replace(shellId, updateData);
   }
 
   private async processQuery(
-    req: any,
+    connection: Connection,
     baseUpdateData: any,
     query: string,
   ): Promise<Partial<Shell>> {
     const isResultTable = this.existResultTable(baseUpdateData.queryType);
 
-    const rows = await this.userDBManager.run(req, query);
-    const runTime = await this.measureQueryRunTime(req);
-
-    // Update usage
+    const rows = await this.userDBManager.run(connection, query);
+    const runTime = await this.measureQueryRunTime(connection);
 
     let text: string;
     let resultTable: RowDataPacket[];
@@ -100,11 +107,12 @@ export class QueryService {
     return validTypes.includes(type);
   }
 
-  async measureQueryRunTime(req: any): Promise<string> {
+  async measureQueryRunTime(connection: Connection): Promise<string> {
     try {
+      const query = `SHOW PROFILES`;
       const rows = (await this.userDBManager.run(
-        req,
-        'show profiles;',
+        connection,
+        query,
       )) as RowDataPacket[];
       let lastQueryRunTime = rows[rows.length - 1]?.Duration;
       lastQueryRunTime = Math.round(lastQueryRunTime * 1000) / 1000 || 0;

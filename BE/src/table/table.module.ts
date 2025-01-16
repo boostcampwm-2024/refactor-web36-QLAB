@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TableService } from './table.service';
 import { TableController } from './table.controller';
-import { QueryDBModule } from '../config/query-database/query-db.moudle';
+import { UserDBModule } from '../config/query-database/user-db.moudle';
 
 @Module({
-  imports: [QueryDBModule],
+  imports: [UserDBModule],
   controllers: [TableController],
   providers: [TableService],
   exports: [TableService],
