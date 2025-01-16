@@ -45,16 +45,14 @@ export class K8SApiService {
           await this.redisService.delPod(podName);
       }
     };
-    
 
     this.k8sWatch.watch(path, queryParams, handlePodEvent, err => {});
   }
 
   async createPod() {
-    const podName = `mysql-pod${this.podCnt++}`;
     const mysqlPod = {
       metadata: {
-        name: podName,
+        generateName: 'mysql-',
         labels: {
           app: 'mysql',
         },
