@@ -26,18 +26,23 @@ export class K8SApiService {
 
   startWatchPod() {
     const path = `/api/v1/namespaces/${this.namespace}/pods`;
-    const queryParams = { allowWatchBookmarks: true };
+    const queryParams = {
+      allowWatchBookmarks: true,
+      labelSelector: 'app=mysql',
+    };
     const handlePodEvent = async (type : String, apiObj: any, watchObj: any) => {
-      if (type === 'ADDED') {
-          const createdPod = watchObj.object.metadata.name;
-          const podIp = await this.getPodIp(createdPod);
+      const podName = watchObj.object.metadata.name;
+      const podStatus = watchObj.object.status;
+      const curPodIp = await this.redisService.hgetPod(podName, 'podIp');
 
-          await this.redisService.hsetPod(createdPod, 'activeUser', 0);
-          //TODO ip가 바로 생성되지 않는 문제 해결 필요
-          await this.redisService.hsetPod(createdPod, 'podIp', podIp);
+      if (type === 'ADDED') {
+          await this.redisService.hsetPod(podName, 'activeUser', 0);
+          await this.redisService.hsetPod(podName, 'podIp', podStatus.podIp || '');
+      } else if (type === 'MODIFIED' && podStatus.podIP && curPodIp == '') {
+        const podIp = podStatus.podIP;
+        await this.redisService.hsetPod(podName, 'podIp', podIp);
       } else if (type === 'DELETED') {
-          const deletedPod = watchObj.object.metadata.name;
-          await this.redisService.delPod(deletedPod);
+          await this.redisService.delPod(podName);
       }
     };
     
@@ -50,6 +55,9 @@ export class K8SApiService {
     const mysqlPod = {
       metadata: {
         name: podName,
+        labels: {
+          app: 'mysql',
+        },
       },
       spec: {
         containers: [
