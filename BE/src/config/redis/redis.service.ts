@@ -46,14 +46,6 @@ export class RedisService {
     return this.sessionConnection.exists(key);
   }
 
-  public async setNewSession(key: string) {
-    const session = await this.existSession(key);
-    if (!session) {
-      await this.sessionConnection.hset(key, 'rowCount', 0);
-    }
-    await this.sessionConnection.expire(key, this.SESSION_TTL);
-  }
-
   public async deleteSession(key: string) {
     await this.sessionConnection.del(key);
   }
@@ -64,6 +56,10 @@ export class RedisService {
 
   public async setRowCount(key: string, rowCount: number) {
     await this.sessionConnection.hset(key, 'rowCount', rowCount);
+  }
+
+  public async setSessionTTlL(key: string) {
+    this.activeUserConnection.expire(key, this.SESSION_TTL);
   }
 
   public async setActiveUser(key: string) {
