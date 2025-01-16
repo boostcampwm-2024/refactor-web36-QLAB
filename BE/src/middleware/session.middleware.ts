@@ -30,8 +30,23 @@ export class SessionMiddleware implements NestMiddleware {
         const session = await this.redisService.existSession(sid);
         if (!session) {
           await this.redisService.setRowCount(sid, 0);
+
+          const allPods = await this.redisService.getPodList();
+          const podList = [];
+
+          for (const podName of allPods) {
+            const activeUser = await this.redisService.getActiveUser(podName);
+            podList.push({ podName, activeUser });
+          }
+          podList.sort((a, b) => a.activeUser - b.activeUser);
+
+          const selectedPod = podList[0].podName;
+          const selectedPodIp = await this.redisService.getPodIp(selectedPod);
+          console.log(selectedPod, selectedPodIp);
+          await this.redisService.setPod(sid, selectedPod);
+          await this.redisService.setPodIp(sid, selectedPodIp);
         }
-        await this.redisService.setSessionTTlL(sid);
+        await this.redisService.setSessionTTL(sid);
         next();
       } catch (error) {
         next(error);

@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class RedisService {
   private sessionConnection: Redis;
   private activeUserConnection: Redis;
+  private podConnection: Redis;
 
   private readonly SESSION_TTL = 60 * 30;
   private readonly ACTIVE_USER_TTL = 60 * 5;
@@ -13,6 +14,7 @@ export class RedisService {
   constructor(private readonly configService: ConfigService) {
     this.setSessionConnection();
     this.setActiveUserConnection();
+    this.setPodConnection();
   }
 
   private setSessionConnection() {
@@ -32,6 +34,14 @@ export class RedisService {
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
       db: this.configService.get<number>('REDIS_DATABASE_ACTIVE_USER'),
+    });
+  }
+
+  private setPodConnection() {
+    this.podConnection = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_POD'),
     });
   }
 
@@ -58,11 +68,32 @@ export class RedisService {
     await this.sessionConnection.hset(key, 'rowCount', rowCount);
   }
 
-  public async setSessionTTlL(key: string) {
+  public async setPod(key: string, selectedPod: string) {
+    await this.sessionConnection.hset(key, 'pod', selectedPod);
+  }
+
+  public async setPodIp(key: string, selectedPodIP: string) {
+    await this.sessionConnection.hset(key, 'podIP', selectedPodIP);
+  }
+
+  public async setSessionTTL(key: string) {
     this.activeUserConnection.expire(key, this.SESSION_TTL);
   }
 
   public async setActiveUser(key: string) {
     this.activeUserConnection.expire(key, this.ACTIVE_USER_TTL);
+  }
+
+  public async getPodList() {
+    return this.podConnection.keys('*');
+  }
+
+  public async getActiveUser(key: string) {
+    const valueStr = await this.podConnection.hget(key, 'activeUser');
+    return parseInt(valueStr);
+  }
+
+  public async getPodIp(key: string) {
+    return this.podConnection.hget(key, 'podIp');
   }
 }
