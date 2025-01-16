@@ -10,11 +10,11 @@ export class SessionEventHandler implements OnModuleInit {
   ) {}
 
   onModuleInit() {
-    this.createDB();
-    this.removeDB();
+    this.appendEventHandler();
+    this.expiredEventHandler();
   }
 
-  private createDB() {
+  private appendEventHandler() {
     const channel = '__keyspace@0__:APPEND';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
@@ -22,7 +22,7 @@ export class SessionEventHandler implements OnModuleInit {
     });
   }
 
-  private removeDB() {
+  private expiredEventHandler() {
     const channel = '__keyspace@0__:EXPIRE';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
