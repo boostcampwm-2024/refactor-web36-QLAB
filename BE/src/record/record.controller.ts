@@ -23,10 +23,10 @@ export class RecordController {
     @Req() req: any,
     @Body() randomRecordInsertDto: CreateRandomRecordDto,
   ) {
-    await this.recordService.validateDto(
-      randomRecordInsertDto,
+    return this.recordService.insertRandomRecord(
       req.dbConnection,
+      req.sessionID,
+      randomRecordInsertDto,
     );
-    return this.recordService.insertRandomRecord(req, randomRecordInsertDto);
   }
 }

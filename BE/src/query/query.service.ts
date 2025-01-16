@@ -56,7 +56,7 @@ export class QueryService {
       };
       return await this.shellService.replace(shellId, updateData);
     }
-    await this.usageService.updateRowCount(sessionId);
+    await this.usageService.updateRowCount(connection, sessionId);
     return await this.shellService.replace(shellId, updateData);
   }
 

@@ -3,6 +3,7 @@ import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { RedisService } from '../config/redis/redis.service';
+import { Connection } from 'mysql2/promise';
 
 @Injectable()
 export class UsageService {
@@ -21,27 +22,28 @@ export class UsageService {
     };
   }
 
-  public async updateRowCount(req: any) {
-    // const tableList: string[] = (
-    //   await this.tableService.getTables(req.sessionID)
-    // ).map((table) => table.TABLE_NAME);
-    // if (tableList.length === 0) {
-    //   await this.redisService.setRowCount(req.sessionID, 0);
-    //   return {
-    //     currentUsage: 0,
-    //     availUsage: this.MAX_ROW_COUNT,
-    //   };
-    // }
-    // const query = this.createSumQuery(req, tableList);
-    // const result = await this.userDBManager.run(req, query);
-    // const rowCount = parseInt(result[0].total_rows, 10);
-    //
-    // if (rowCount > this.MAX_ROW_COUNT) throw new DataLimitExceedException();
-    //
-    // await this.redisService.setRowCount(req.sessionID, rowCount);
+  public async updateRowCount(connection: Connection, sessionId: string) {
+    const tableList: string[] = await this.tableService.getTables(
+      connection,
+      sessionId,
+    );
+    if (tableList.length === 0) {
+      await this.redisService.setRowCount(sessionId, 0);
+      return {
+        currentUsage: 0,
+        availUsage: this.MAX_ROW_COUNT,
+      };
+    }
+    const query = this.createSumQuery(tableList);
+    const result = await this.userDBManager.run(connection, query);
+    const rowCount = parseInt(result[0].total_rows, 10);
+
+    if (rowCount > this.MAX_ROW_COUNT) throw new DataLimitExceedException();
+
+    await this.redisService.setRowCount(sessionId, rowCount);
   }
 
-  private createSumQuery(req: any, tableNameList: string[]): string {
+  private createSumQuery(tableNameList: string[]): string {
     const unionQueries = tableNameList
       .map(
         (tableName) =>
