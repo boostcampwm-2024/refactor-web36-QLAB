@@ -16,7 +16,7 @@ import { UsageService } from '../usage/usage.service';
 import { FileService } from './file.service';
 import { TableService } from '../table/table.service';
 import { ResTableDto } from '../table/dto/res-table.dto';
-import { Connection } from "mysql2/promise";
+import { Connection } from 'mysql2/promise';
 
 @Injectable()
 export class RecordService {
@@ -30,35 +30,36 @@ export class RecordService {
     createRandomRecordDto: CreateRandomRecordDto,
     connection: Connection,
   ) {
-    // const tableInfo: ResTableDto = (await this.tableService.find(connection
-    //   createRandomRecordDto.tableName,
-    // ))
-    //
-    // if (!tableInfo?.tableName)
-    //   throw new BadRequestException(
-    //     `${createRandomRecordDto.tableName} 테이블이 존재하지 않습니다.`,
-    //   );
-    //
-    // const baseColumns = tableInfo.columns;
-    // const columnInfos: RandomColumnInfo[] = createRandomRecordDto.columns;
-    //
-    // columnInfos.forEach((columnInfo) => {
-    //   const targetName = columnInfo.name;
-    //   const targetDomain = columnInfo.type;
-    //   const baseColumn = baseColumns.find(
-    //     (column) => column.name === columnInfo.name,
-    //   );
-    //
-    //   if (!baseColumn)
-    //     throw new BadRequestException(
-    //       `${targetName} 컬럼이 ${createRandomRecordDto.tableName} 에 존재하지 않습니다.`,
-    //     );
-    //
-    //   if (!this.checkDomainAvailability(baseColumn.type, targetDomain))
-    //     throw new BadRequestException(
-    //       `${targetName}(${baseColumn.type}) 컬럼에 ${targetDomain} 랜덤 값을 넣을 수 없습니다.`,
-    //     );
-    // });
+    const tableInfo = await this.tableService.find(
+      connection,
+      createRandomRecordDto.tableName,
+    );
+
+    if (!tableInfo?.tableName)
+      throw new BadRequestException(
+        `${createRandomRecordDto.tableName} 테이블이 존재하지 않습니다.`,
+      );
+
+    const baseColumns = tableInfo.columns;
+    const columnInfos: RandomColumnInfo[] = createRandomRecordDto.columns;
+
+    columnInfos.forEach((columnInfo) => {
+      const targetName = columnInfo.name;
+      const targetDomain = columnInfo.type;
+      const baseColumn = baseColumns.find(
+        (column) => column.name === columnInfo.name,
+      );
+
+      if (!baseColumn)
+        throw new BadRequestException(
+          `${targetName} 컬럼이 ${createRandomRecordDto.tableName} 에 존재하지 않습니다.`,
+        );
+
+      if (!this.checkDomainAvailability(baseColumn.type, targetDomain))
+        throw new BadRequestException(
+          `${targetName}(${baseColumn.type}) 컬럼에 ${targetDomain} 랜덤 값을 넣을 수 없습니다.`,
+        );
+    });
   }
 
   checkDomainAvailability(mysqlType: string, targetDomain: string) {

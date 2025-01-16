@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class RedisService {
   private readonly sessionConnection: Redis;
   private readonly podConnection: Redis;
+  private readonly sessionSubscriber: Redis;
   private readonly activeUserSubscriber: Redis;
 
   constructor(private readonly configService: ConfigService) {
@@ -19,6 +20,12 @@ export class RedisService {
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
       db: this.configService.get<number>('REDIS_DATABASE_POD'),
+    });
+
+    this.sessionSubscriber = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_SESSION'),
     });
 
     this.activeUserSubscriber = new Redis({
@@ -38,6 +45,16 @@ export class RedisService {
 
   async hsetPod(key: string, field: string, value: number): Promise<void> {
     await this.podConnection.hset(key, field, value);
+  }
+
+  async subscribeSession(
+    channel: string,
+    onMessage: (message: string) => void,
+  ): Promise<void> {
+    await this.sessionSubscriber.subscribe(channel);
+    this.sessionSubscriber.on('message', (_, message) => {
+      onMessage(message);
+    });
   }
 
   async subscribeActiveUser(
