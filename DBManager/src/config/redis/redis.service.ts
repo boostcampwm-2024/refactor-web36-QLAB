@@ -47,6 +47,10 @@ export class RedisService {
     await this.podConnection.hset(key, field, value);
   }
 
+  async delPod(key: string): Promise<void> {
+    await this.podConnection.del(key);
+  }
+
   async subscribeSession(
     channel: string,
     onMessage: (message: string) => void,

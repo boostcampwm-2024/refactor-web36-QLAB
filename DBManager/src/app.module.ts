@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { KubernetesService } from './K8S/KubernetesService';
 import { ConfigModule } from '@nestjs/config';
+import { K8SApiModule } from './k8s/K8SApi.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -10,8 +10,9 @@ import { ScheduleModule } from '@nestjs/schedule';
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),
+    K8SApiModule,
   ],
   controllers: [AppController],
-  providers: [KubernetesService],
+  providers: [],
 })
 export class AppModule {}
