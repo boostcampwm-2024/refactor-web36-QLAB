@@ -17,18 +17,19 @@ export class SessionEventHandler implements OnModuleInit {
   }
 
   private appendEventHandler() {
-    const channel = '__keyevent@0__:new_key';
-    this.redisService.subscribeSession(channel, async (sessionId) => {
-      console.log("create key", sessionId);
+    const channel = 'newSession';
+    this.redisService.subscribeSession(channel);
+    this.redisService.eventHandlerSession(channel, async (sessionId) => {
       await this.loadBalancer.allocate(sessionId);
-      const pod = await this.redisService.hgetSession(sessionId, 'pod');
-      this.userDBService.initUserDatabase(pod, sessionId);
+      const podIp = await this.redisService.hgetSession(sessionId, 'podIp');
+      this.userDBService.initUserDatabase(podIp, sessionId);
     });
   }
 
   private expiredEventHandler() {
     const channel = '__keyevent@0__:expired';
-     this.redisService.subscribeSession(channel, async (sessionId) => {
+     this.redisService.subscribeSession(channel);
+     this.redisService.eventHandlerSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
       this.userDBService.removeDatabase(pod, sessionId);
     });

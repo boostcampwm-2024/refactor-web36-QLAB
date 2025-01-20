@@ -96,4 +96,8 @@ export class RedisService {
   public async getPodIp(key: string) {
     return this.podConnection.hget(key, 'podIp');
   }
+
+  public async newSessionPublish(key: string) {
+    return this.sessionConnection.publish('newSession', key);
+  }
 }

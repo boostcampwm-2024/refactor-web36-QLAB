@@ -59,13 +59,17 @@ export class RedisService {
     return this.podConnection.keys('*');
   }
 
-  async subscribeSession(
-    channel: string,
+  async subscribeSession(channel: string): Promise<void> {
+    await this.sessionSubscriber.subscribe(channel);
+  }
+
+  async eventHandlerSession(
+    listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
-    await this.sessionSubscriber.subscribe(channel);
-    this.sessionSubscriber.on('message', (_, message) => {
-      onMessage(message);
+    this.sessionSubscriber.on('message', (channel, message) => {
+      if (channel === listening)
+        onMessage(message);
     });
   }
 
@@ -74,7 +78,7 @@ export class RedisService {
     onMessage: (message: string) => void,
   ): Promise<void> {
     await this.activeUserSubscriber.subscribe(channel);
-    this.activeUserSubscriber.on('message', (_, message) => {
+    this.activeUserSubscriber.on('message', (channel, message) => {
       onMessage(message);
     });
   }

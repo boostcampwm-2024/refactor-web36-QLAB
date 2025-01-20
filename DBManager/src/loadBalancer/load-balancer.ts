@@ -17,7 +17,6 @@ export class LoadBalancer {
     const selectedPod = podList[0].podName;
     const selectedPodIp = await this.redisService.hgetPod(selectedPod, 'podIp');
 
-    console.log(selectedPod, selectedPod);
     await this.redisService.hsetSession(sessionId, 'pod', selectedPod);
     await this.redisService.hsetSession(sessionId, 'podIp', selectedPodIp);
   }
