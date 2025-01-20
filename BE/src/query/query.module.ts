@@ -7,6 +7,7 @@ import { UsageModule } from '../usage/usage.module';
 import { RedisModule } from '../config/redis/redis.module';
 import { UserDBModule } from '../config/query-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
+import { RepositoriesModule } from 'src/repositories/repositories.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ShellModule } from '../shell/shell.module';
     RedisModule,
     UserDBModule,
     ShellModule,
+    RepositoriesModule,
   ],
   controllers: [QueryController],
   providers: [QueryService],
