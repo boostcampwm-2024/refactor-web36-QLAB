@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
-import { RedisService } from './redis.service';
 import { UserDBModule } from '../query-database/user-db.moudle';
+import { ConfigModule } from '@nestjs/config';
+import { RedisProviders } from './redis.providers';
 
 @Module({
-  imports: [UserDBModule],
-  providers: [RedisService],
-  exports: [RedisService],
+  imports: [UserDBModule, ConfigModule],
+  providers: [...RedisProviders],
+  exports: [...RedisProviders],
 })
 export class RedisModule {}
