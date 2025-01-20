@@ -69,4 +69,8 @@ export class RedisService {
   public async setActiveUser(key: string) {
     this.activeUserConnection.expire(key, this.ACTIVE_USER_TTL);
   }
+
+  public async getConnectedPod(key: string): Promise<string> {
+    return this.sessionConnection.hget(key, 'podIp');
+  }
 }
