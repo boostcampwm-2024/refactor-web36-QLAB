@@ -3,7 +3,7 @@ import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { MySqlContainer } from '@testcontainers/mysql';
 import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, of, throwError } from 'rxjs';
-import { mock, mockDeep } from 'jest-mock-extended';
+import { mock } from 'jest-mock-extended';
 import {
   ConnectionLimitExceedException,
   DataLimitExceedException,
