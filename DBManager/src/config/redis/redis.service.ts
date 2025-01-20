@@ -39,6 +39,10 @@ export class RedisService {
     return this.sessionConnection.hget(key, field);
   }
 
+  async hsetSession(key: string, field: string, value: string): Promise<void> {
+    await this.sessionConnection.hset(key, field, value);
+  }
+
   async hgetPod(key: string, field: string): Promise<string | null> {
     return this.podConnection.hget(key, field);
   }
@@ -49,6 +53,10 @@ export class RedisService {
 
   async delPod(key: string): Promise<void> {
     await this.podConnection.del(key);
+  }
+
+  async keysPod() {
+    return this.podConnection.keys('*');
   }
 
   async subscribeSession(
