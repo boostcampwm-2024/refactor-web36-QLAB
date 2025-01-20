@@ -77,7 +77,7 @@ export class RedisService {
   }
 
   public async setSessionTTL(key: string) {
-    this.activeUserConnection.expire(key, this.SESSION_TTL);
+    this.sessionConnection.expire(key, this.SESSION_TTL);
   }
 
   public async setActiveUser(key: string) {
