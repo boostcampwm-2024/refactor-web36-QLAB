@@ -13,8 +13,9 @@ export class ActiveUserService implements OnModuleInit {
   }
 
   private countUp() {
-    const channel = '__keyspace@1__:APPEND';
-    this.redisService.subscribeActiveUser(channel, async (sessionId) => {
+    const channel = '__keyspace@1__:set';
+    this.redisService.subscribeActiveUser(channel);
+    this.redisService.eventHandlerActiveUser(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
 
       const currentCount = this.activeUserVariation.get(pod) ?? 0;
@@ -23,8 +24,9 @@ export class ActiveUserService implements OnModuleInit {
   }
 
   private countDown() {
-    const channel = '__keyspace@1__:EXPIRE';
-    this.redisService.subscribeActiveUser(channel, async (sessionId) => {
+    const channel = '__keyevent@1__:expired';
+    this.redisService.subscribeActiveUser(channel);
+    this.redisService.eventHandlerActiveUser(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
 
       const currentCount = this.activeUserVariation.get(pod) ?? 0;

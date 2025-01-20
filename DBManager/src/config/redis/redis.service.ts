@@ -73,13 +73,17 @@ export class RedisService {
     });
   }
 
-  async subscribeActiveUser(
-    channel: string,
+  async subscribeActiveUser(channel: string): Promise<void> {
+    await this.activeUserSubscriber.subscribe(channel);
+  }
+
+  async eventHandlerActiveUser(
+    listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
-    await this.activeUserSubscriber.subscribe(channel);
-    this.activeUserSubscriber.on('message', (channel, message) => {
-      onMessage(message);
+    this.sessionSubscriber.on('message', (channel, message) => {
+      if (channel === listening)
+        onMessage(message);
     });
   }
 }
