@@ -8,7 +8,6 @@ export class RedisService {
   private sessionConnection: Redis;
   private eventConnection: Redis;
   private activeUserConnection: Redis;
-  private podConnection: Redis;
 
   private readonly SESSION_TTL = 60 * 30;
   private readonly ACTIVE_USER_TTL = 60 * 5;
@@ -20,7 +19,6 @@ export class RedisService {
     this.setSessionConnection();
     this.setEventConnection();
     this.setActiveUserConnection();
-    this.setPodConnection();
   }
 
   private setSessionConnection() {
@@ -40,14 +38,6 @@ export class RedisService {
       host: this.configService.get<string>('REDIS_HOST'),
       port: this.configService.get<number>('REDIS_PORT'),
       db: this.configService.get<number>('REDIS_DATABASE_ACTIVE_USER'),
-    });
-  }
-
-  private setPodConnection() {
-    this.podConnection = new Redis({
-      host: this.configService.get<string>('REDIS_HOST'),
-      port: this.configService.get<number>('REDIS_PORT'),
-      db: this.configService.get<number>('REDIS_DATABASE_POD'),
     });
   }
 
@@ -107,6 +97,6 @@ export class RedisService {
   }
 
   public async getConnectedPod(key: string): Promise<string> {
-    return this.podConnection.hget(key, 'podIp');
+    return this.sessionConnection.hget(key, 'podIp');
   }
 }
