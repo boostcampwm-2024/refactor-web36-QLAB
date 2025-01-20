@@ -12,7 +12,7 @@ import {
   ConnectionLimitExceedException,
   DataLimitExceedException,
 } from '../common/exception/custom-exception';
-import { PodListRepository } from '../repositories/podList.repository';
+import { PodListRepository } from '../redis-repositories/podList.repository';
 
 @Injectable()
 export class UserDBConnectionInterceptor implements NestInterceptor {

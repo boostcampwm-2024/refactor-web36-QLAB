@@ -11,7 +11,7 @@ import {
 import { StartedTestContainer } from 'testcontainers';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PodListRepository } from '../../src/repositories/podList.repository';
+import { PodListRepository } from '../../src/redis-repositories/podList.repository';
 
 let interceptor: UserDBConnectionInterceptor;
 let dbContainer: StartedTestContainer;

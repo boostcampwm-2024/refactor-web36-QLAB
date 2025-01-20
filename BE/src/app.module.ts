@@ -16,7 +16,7 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { RepositoriesModule } from './repositories/repositories.module';
+import { RepositoriesModule } from './redis-repositories/repositories.module';
 
 @Module({
   imports: [

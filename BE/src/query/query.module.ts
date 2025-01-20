@@ -6,7 +6,7 @@ import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
 import { UserDBModule } from '../config/query-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
-import { RepositoriesModule } from 'src/repositories/repositories.module';
+import { RepositoriesModule } from 'src/redis-repositories/repositories.module';
 
 @Module({
   imports: [
