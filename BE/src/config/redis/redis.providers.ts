@@ -21,7 +21,7 @@ export const RedisProviders: Provider[] = [
     inject: [ConfigService],
   },
   {
-    provide: 'POD_STORE_CONNECTION',
+    provide: 'POD_LIST_STORE_CONNECTION',
     useFactory: (configService: ConfigService) =>
       createRedisConnection(configService, 'REDIS_DATABASE_POD'),
     inject: [ConfigService],
