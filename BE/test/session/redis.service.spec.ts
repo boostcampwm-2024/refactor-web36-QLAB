@@ -1,6 +1,6 @@
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
-import { SessionRepository } from 'src/repositories/session.repository';
 import Redis from 'ioredis';
+import { SessionRepository } from '../../src/repositories/session.repository';
 
 describe('RedisService', () => {
   let sessionRepository: SessionRepository;

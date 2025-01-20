@@ -3,7 +3,7 @@ import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { Connection } from 'mysql2/promise';
-import { SessionRepository } from 'src/repositories/session.repository';
+import { SessionRepository } from '../repositories/session.repository';
 
 @Injectable()
 export class UsageService {

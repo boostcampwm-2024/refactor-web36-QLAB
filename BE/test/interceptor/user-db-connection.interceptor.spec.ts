@@ -3,7 +3,7 @@ import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { MySqlContainer } from '@testcontainers/mysql';
 import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, of, throwError } from 'rxjs';
-import { mock } from 'jest-mock-extended';
+import { mock, mockDeep } from 'jest-mock-extended';
 import {
   ConnectionLimitExceedException,
   DataLimitExceedException,
@@ -11,9 +11,11 @@ import {
 import { StartedTestContainer } from 'testcontainers';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Test, TestingModule } from '@nestjs/testing';
+import { PodListRepository } from '../../src/repositories/podList.repository';
 
 let interceptor: UserDBConnectionInterceptor;
 let dbContainer: StartedTestContainer;
+let mockPodListRepository: PodListRepository;
 const mockContext = mock<ExecutionContext>();
 const mockConfigService = mock<ConfigService>();
 const mockCallHandler = mock<CallHandler>();
@@ -57,9 +59,14 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  mockPodListRepository = {
+    getConnectedPod: jest.fn().mockResolvedValue('127.0.0.1'),
+  } as unknown as PodListRepository;
+
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       UserDBConnectionInterceptor,
+      { provide: PodListRepository, useValue: mockPodListRepository },
       { provide: ConfigService, useValue: mockConfigService },
     ],
   }).compile();

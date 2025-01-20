@@ -27,6 +27,10 @@ services:
       QUERY_DB_PASSWORD: db1004
       QUERY_DB_DATABASE: qlab
 
+      REDIS_DATABASE_SESSION: 0
+      REDIS_DATABASE_ACTIVE_USER: 1 
+      REDIS_DATABASE_POD: 2
+
       SESSION_SECRET: session-secret
 
       REDIS_HOST: redis
