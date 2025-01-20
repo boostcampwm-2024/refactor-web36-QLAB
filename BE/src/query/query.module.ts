@@ -4,7 +4,6 @@ import { QueryController } from './query.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
-import { RedisModule } from '../config/redis/redis.module';
 import { UserDBModule } from '../config/query-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
 import { RepositoriesModule } from 'src/repositories/repositories.module';
@@ -13,7 +12,6 @@ import { RepositoriesModule } from 'src/repositories/repositories.module';
   imports: [
     TypeOrmModule.forFeature([Shell]),
     UsageModule,
-    RedisModule,
     UserDBModule,
     ShellModule,
     RepositoriesModule,
