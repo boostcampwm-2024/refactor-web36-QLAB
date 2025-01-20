@@ -6,5 +6,6 @@ import { UserDBConnector } from './user-db.connector';
 @Module({
   imports: [RedisModule],
   providers: [UserDBService, UserDBConnector],
+  exports: [UserDBService]
 })
 export class UserDBModule {}

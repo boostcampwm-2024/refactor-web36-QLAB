@@ -47,7 +47,7 @@ export class RedisService {
     return this.podConnection.hget(key, field);
   }
 
-  async hsetPod(key: string, field: string, value: number): Promise<void> {
+  async hsetPod(key: string, field: string, value: number | string): Promise<void> {
     await this.podConnection.hset(key, field, value);
   }
 

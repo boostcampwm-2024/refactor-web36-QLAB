@@ -17,8 +17,9 @@ export class SessionEventHandler implements OnModuleInit {
   }
 
   private appendEventHandler() {
-    const channel = '__keyspace@0__:APPEND';
+    const channel = '__keyevent@0__:new_key';
     this.redisService.subscribeSession(channel, async (sessionId) => {
+      console.log("create key", sessionId);
       await this.loadBalancer.allocate(sessionId);
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
       this.userDBService.initUserDatabase(pod, sessionId);
@@ -26,8 +27,8 @@ export class SessionEventHandler implements OnModuleInit {
   }
 
   private expiredEventHandler() {
-    const channel = '__keyspace@0__:EXPIRE';
-    this.redisService.subscribeSession(channel, async (sessionId) => {
+    const channel = '__keyevent@0__:expired';
+     this.redisService.subscribeSession(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
       this.userDBService.removeDatabase(pod, sessionId);
     });
