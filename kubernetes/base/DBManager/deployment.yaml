@@ -12,6 +12,7 @@ spec:
       labels:
         app: dbmanager
     spec:
+      serviceAccountName: dbmanager-account
       containers:
       - name: dbmanager
         image: hoon317/qlab-dbmanager
