@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apiserver-deployment
+  name: dbmanager-deployment
 spec:
   replicas: 1
   template:
     spec:
       nodeSelector:
-        node: apiserver
+        node: dbmanager
       containers:
-      - name: apiserver
-        image: hoon317/qlab-apiserver:latest
+      - name: dbmanager
+        image: hoon317/qlab-dbmanager:latest
         imagePullPolicy: Always

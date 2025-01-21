@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dbmanager-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dbmanager
+  template:
+    metadata:
+      labels:
+        app: dbmanager
+    spec:
+      containers:
+      - name: dbmanager
+        image: hoon317/qlab-dbmanager
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: qlab-config

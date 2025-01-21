@@ -1,0 +1,6 @@
+resources:
+  - ../../../base/DBManager
+
+patches:
+  - path: deployment-patch.yaml
+  - path: service-patch.yaml

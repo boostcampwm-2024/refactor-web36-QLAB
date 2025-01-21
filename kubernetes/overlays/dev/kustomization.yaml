@@ -3,6 +3,7 @@ resources:
   - ./redis
   - ./serverDB
   - ./webServer
+  - ./DBManager
   - ../../base
 
 patches:

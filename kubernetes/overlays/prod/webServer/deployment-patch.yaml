@@ -10,5 +10,5 @@ spec:
         node: apiserver
       containers:
       - name: webserver
-        image: hoon317/qlab-webserver
+        image: hoon317/qlab-webserver:latest
         imagePullPolicy: Always
