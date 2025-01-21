@@ -4,3 +4,4 @@ resources:
   - ./redis
   - ./serverDB
   - ./webServer
+  - secret.yaml

@@ -1,3 +1,4 @@
 resources:
-  - apiServer-deployment.yaml
-  - apiServer-service.yaml
+  - deployment.yaml
+  - pvc.yaml
+  - service.yaml

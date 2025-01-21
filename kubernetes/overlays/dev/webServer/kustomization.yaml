@@ -1,0 +1,5 @@
+resouces:
+  - ../../../base/webServer
+
+patches:
+  - path: deployment-patch.yaml

@@ -1,10 +1,8 @@
 resources:
-  - ../../base
+  - ./apiServer
+  - ./redis
+  - ./serverDB
+  - ./webServer
 
 patches:
-  - path: apiServer-deployment-patch.yaml
-  - path: apiServer-service-patch.yaml
-  - path: webServer-deployment-patch.yaml
-  - path: serverDB-service-patch.yaml
-  - path: redis-service-patch.yaml
   - path: secret.yaml
