@@ -5,10 +5,10 @@ import { UserDBModule } from '../config/query-database/user-db.moudle';
 import { UsageModule } from '../usage/usage.module';
 import { TableModule } from 'src/table/table.module';
 import { FileService } from './file.service';
-import { RepositoriesModule } from 'src/redis/repositories.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
-  imports: [RepositoriesModule, UserDBModule, UsageModule, TableModule],
+  imports: [RedisModule, UserDBModule, UsageModule, TableModule],
   controllers: [RecordController],
   providers: [RecordService, FileService],
 })
