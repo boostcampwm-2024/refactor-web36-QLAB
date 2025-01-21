@@ -12,13 +12,13 @@ import {
   ConnectionLimitExceedException,
   DataLimitExceedException,
 } from '../common/exception/custom-exception';
-import { RedisService } from 'src/config/redis/redis.service';
+import { PodListRepository } from '../redis/podList.repository';
 
 @Injectable()
 export class UserDBConnectionInterceptor implements NestInterceptor {
   constructor(
     private readonly configService: ConfigService,
-    private readonly redisService: RedisService,
+    private readonly podListRepository: PodListRepository,
   ) {}
 
   async intercept(
@@ -27,7 +27,7 @@ export class UserDBConnectionInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const identify = request.sessionID;
-    const podIp = await this.redisService.getConnectedPod(identify);
+    const podIp = await this.podListRepository.getConnectedPod(identify);
 
     try {
       request.dbConnection = await createConnection({

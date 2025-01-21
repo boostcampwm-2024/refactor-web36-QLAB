@@ -4,17 +4,17 @@ import { QueryController } from './query.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
-import { RedisModule } from '../config/redis/redis.module';
 import { UserDBModule } from '../config/query-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Shell]),
     UsageModule,
-    RedisModule,
     UserDBModule,
     ShellModule,
+    RedisModule,
   ],
   controllers: [QueryController],
   providers: [QueryService],

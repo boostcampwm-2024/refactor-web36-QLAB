@@ -6,7 +6,7 @@ import { Shell } from 'src/shell/shell.entity';
 import { User } from 'src/user/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SessionMiddleware } from './middleware/session.middleware';
-import { RedisModule } from './config/redis/redis.module';
+import { RedisProviderModule } from './config/redisProvider/redis-provider.module';
 import { ServiceDBModule } from './config/service-database/service-db.module';
 import { RecordModule } from './record/record.module';
 import { TableModule } from './table/table.module';
@@ -16,6 +16,7 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -27,11 +28,12 @@ import { ZodValidationPipe } from 'nestjs-zod';
     UserModule,
     ShellModule,
     QueryModule,
-    RedisModule,
+    RedisProviderModule,
     RecordModule,
     TableModule,
     UsageModule,
     LoggerModule,
+    RedisModule,
   ],
   providers: [
     {
