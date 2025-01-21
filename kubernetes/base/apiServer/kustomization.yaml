@@ -1,0 +1,3 @@
+resources:
+  - apiServer-deployment.yaml
+  - apiServer-service.yaml

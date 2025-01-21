@@ -1,0 +1,3 @@
+resources:
+  - webServer-deployment.yaml
+  - webServer-service.yaml
