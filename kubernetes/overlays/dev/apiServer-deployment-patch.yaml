@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apiserver-deployment
+spec:
+  template:
+    spec:
+      containers:
+      - name: apiserver
+        image: local-qlab-apiserver:latest
+        imagePullPolicy: Never
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: db-password
+              
+        - name: SESSION_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: session-secret

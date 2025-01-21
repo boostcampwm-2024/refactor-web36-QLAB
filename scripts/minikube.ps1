@@ -9,6 +9,5 @@ if ($status -eq "Running") {
 docker build -t local-qlab-apiserver -f ./BE/Dockerfile .
 docker build -t local-qlab-webserver -f ./FE/Dockerfile .
 
-kubectl delete -f ./kubernetes/apiServer-deployment.yaml
-kubectl delete -f ./kubernetes/webServer-deployment.yaml
+kubectl config use-context minikube
 kubectl apply -f ./kubernetes/
