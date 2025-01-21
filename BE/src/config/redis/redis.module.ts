@@ -4,7 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { RedisProviders } from './redis.providers';
 
 @Module({
-  imports: [UserDBModule, ConfigModule],
+  imports: [UserDBModule],
   providers: [...RedisProviders],
   exports: [...RedisProviders],
 })
