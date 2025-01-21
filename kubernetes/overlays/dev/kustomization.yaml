@@ -3,4 +3,7 @@ resources:
   - ./redis
   - ./serverDB
   - ./webServer
-  - ./secret.yaml
+  - ../../base
+
+patches:
+  - path: secret.yaml

@@ -4,3 +4,4 @@ resources:
   - ./redis
   - ./serverDB
   - ./webServer
+  - ../../base

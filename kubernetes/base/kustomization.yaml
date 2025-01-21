@@ -1,7 +1,3 @@
 resources:
-  - ./apiServer
-  - ./queryDB
-  - ./redis
-  - ./serverDB
-  - ./webServer
+  - configMap.yaml
   - secret.yaml
