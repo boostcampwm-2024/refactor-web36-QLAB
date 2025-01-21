@@ -1,0 +1,13 @@
+resources:
+  - apiServer-deployment.yaml
+  - apiServer-service.yaml
+  - queryDB-deployment.yaml
+  - redis-deployment.yaml
+  - redis-pvc.yaml
+  - redis-service.yaml
+  - secret.yaml
+  - serverDB-deployment.yaml
+  - serverDB-pvc.yaml
+  - serverDB-service.yaml
+  - webServer-deployment.yaml
+  - webServer-service.yaml
