@@ -6,7 +6,8 @@ import { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { UsageService } from 'src/usage/usage.service';
-import { ActiveUserRepository } from 'src/redis/activeUser.repository';
+import { ActiveUserRepository } from 'src/redis/active-user.repository';
+import { ReadyQueueManager } from '../redis/ready-queue.manager';
 
 @Injectable()
 export class QueryService {
@@ -15,6 +16,7 @@ export class QueryService {
     private shellService: ShellService,
     private readonly usageService: UsageService,
     private readonly activeUserRepository: ActiveUserRepository,
+    private readonly readyQueueManager: ReadyQueueManager,
   ) {}
 
   async execute(
@@ -24,6 +26,9 @@ export class QueryService {
     queryDto: QueryDto,
   ) {
     this.activeUserRepository.setActiveUser(sessionId);
+
+    await this.readyQueueManager.processQueue(sessionId);
+
     await this.shellService.findShellOrThrow(shellId);
 
     const baseUpdateData = {
