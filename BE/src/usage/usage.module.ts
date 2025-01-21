@@ -3,7 +3,7 @@ import { UsageController } from './usage.controller';
 import { UsageService } from './usage.service';
 import { TableModule } from '../table/table.module';
 import { UserDBModule } from '../config/query-database/user-db.moudle';
-import { RepositoriesModule } from 'src/redis-repositories/repositories.module';
+import { RepositoriesModule } from 'src/redis/repositories.module';
 
 @Module({
   imports: [TableModule, UserDBModule, RepositoriesModule],

@@ -4,7 +4,7 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomRedisStore } from 'src/config/redis/custom-redis-store';
 import { ConfigService } from '@nestjs/config';
-import { SessionRepository } from 'src/redis-repositories/session.repository';
+import { SessionRepository } from 'src/redis/session.repository';
 
 @Injectable()
 export class SessionMiddleware implements NestMiddleware {
