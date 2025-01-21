@@ -1,4 +1,4 @@
-resouces:
+resources:
   - ../../../base/webServer
 
 patches:

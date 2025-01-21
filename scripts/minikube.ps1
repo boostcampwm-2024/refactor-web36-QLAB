@@ -10,4 +10,4 @@ docker build -t local-qlab-apiserver -f ./BE/Dockerfile .
 docker build -t local-qlab-webserver -f ./FE/Dockerfile .
 
 kubectl config use-context minikube
-kubectl apply -f ./kubernetes/
+kubectl apply -k ./kubernetes/overlays/dev
