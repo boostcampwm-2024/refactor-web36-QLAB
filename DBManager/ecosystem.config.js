@@ -3,9 +3,9 @@ module.exports = {
     {
       name: 'nest-server',
       script: 'dist/main.js', // NestJS 서버의 진입 파일
-      instances: 1, // 클러스터 모드: CPU 코어 수만큼 프로세스 실행
-      exec_mode: 'fork', // 클러스터 모드
-      watch: false, // 파일 변경 감지 후 재시작
+      instances: 1, 
+      exec_mode: 'fork', 
+      watch: false,
       env: {
         NODE_ENV: 'development',
       },
