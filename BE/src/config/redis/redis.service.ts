@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 export class RedisService {
   private sessionConnection: Redis;
   private activeUserConnection: Redis;
+  private podConnection: Redis;
 
   private readonly SESSION_TTL = 60 * 30;
   private readonly ACTIVE_USER_TTL = 60 * 5;
@@ -13,6 +14,7 @@ export class RedisService {
   constructor(private readonly configService: ConfigService) {
     this.setSessionConnection();
     this.setActiveUserConnection();
+    this.setPodConnection();
   }
 
   private setSessionConnection() {
@@ -35,6 +37,14 @@ export class RedisService {
     });
   }
 
+  private setPodConnection() {
+    this.podConnection = new Redis({
+      host: this.configService.get<string>('REDIS_HOST'),
+      port: this.configService.get<number>('REDIS_PORT'),
+      db: this.configService.get<number>('REDIS_DATABASE_POD'),
+    });
+  }
+
   public async getSession(key: string) {
     if (!key) {
       return null;
@@ -44,14 +54,6 @@ export class RedisService {
 
   public async existSession(key: string) {
     return this.sessionConnection.exists(key);
-  }
-
-  public async setNewSession(key: string) {
-    const session = await this.existSession(key);
-    if (!session) {
-      await this.sessionConnection.hset(key, 'rowCount', 0);
-    }
-    await this.sessionConnection.expire(key, this.SESSION_TTL);
   }
 
   public async deleteSession(key: string) {
@@ -66,9 +68,37 @@ export class RedisService {
     await this.sessionConnection.hset(key, 'rowCount', rowCount);
   }
 
+  public async setPod(key: string, selectedPod: string) {
+    await this.sessionConnection.hset(key, 'pod', selectedPod);
+  }
+
+  public async setPodIp(key: string, selectedPodIP: string) {
+    await this.sessionConnection.hset(key, 'podIP', selectedPodIP);
+  }
+
+  public async setSessionTTL(key: string) {
+    this.sessionConnection.expire(key, this.SESSION_TTL);
+  }
+
   public async setActiveUser(key: string) {
     this.activeUserConnection.expire(key, this.ACTIVE_USER_TTL);
   }
+
+  public async getPodList() {
+    return this.podConnection.keys('*');
+  }
+
+  public async getActiveUser(key: string) {
+    const valueStr = await this.podConnection.hget(key, 'activeUser');
+    return parseInt(valueStr);
+  }
+
+  public async getPodIp(key: string) {
+    return this.podConnection.hget(key, 'podIp');
+  }
+
+  public async newSessionPublish(key: string) {
+    return this.sessionConnection.publish('newSession', key);
 
   public async getConnectedPod(key: string): Promise<string> {
     return this.sessionConnection.hget(key, 'podIp');

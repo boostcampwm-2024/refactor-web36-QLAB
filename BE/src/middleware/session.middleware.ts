@@ -26,7 +26,13 @@ export class SessionMiddleware implements NestMiddleware {
       name: 'sid',
     })(req, res, async () => {
       try {
-        await this.redisService.setNewSession(req.sessionID);
+        const sid = req.sessionID;
+        const session = await this.redisService.existSession(sid);
+        if (!session) {
+          await this.redisService.newSessionPublish(sid);
+          await this.redisService.setRowCount(sid, 0);
+        }
+        await this.redisService.setSessionTTL(sid);
         next();
       } catch (error) {
         next(error);
