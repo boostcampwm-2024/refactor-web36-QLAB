@@ -1,0 +1,9 @@
+resources:
+  - ../../base
+
+patches:
+  - path: apiServer-deployment-patch.yaml
+  - path: webServer-deployment-patch.yaml
+  - path: redis-deployment-patch.yaml
+  - path: queryDB-deployment-patch.yaml
+  - path: serverDB-deployment-patch.yaml

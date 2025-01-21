@@ -40,4 +40,12 @@ export class SessionRepository {
   public async setRowCount(key: string, rowCount: number) {
     await this.sessionConnection.hset(key, 'rowCount', rowCount);
   }
+
+  public async setSessionTTL(key: string) {
+    this.sessionConnection.expire(key, this.SESSION_TTL);
+  }
+
+  public async newSessionPublish(key: string) {
+    return this.sessionConnection.publish('newSession', key);
+  }
 }

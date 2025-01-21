@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: apiserver
-        image: local-qlab-apiserver:latest
-        imagePullPolicy: Never
+        image: hoon317/qlab-apiserver
         ports:
         - containerPort: 3000
         env:
@@ -27,11 +26,6 @@ spec:
           value: '3306'
         - name: DB_USERNAME
           value: 'root'
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: qlab-secret
-              key: db-password
         - name: DB_DATABASE
           value: 'qlabdb'
         
@@ -41,24 +35,8 @@ spec:
           value: '3306'
         - name: QUERY_DB_USER
           value: 'root'
-        - name: QUERY_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: qlab-secret
-              key: querydb-password
 
         - name: REDIS_HOST
           value: 'redis-service.default'
         - name: REDIS_PORT
           value: '6379' 
-        - name: REDIS_DATABASE_SESSION
-          value: '0'
-        - name: REDIS_DATABASE_ACTIVE_USER
-          value: '1'
-        - name: REDIS_DATABASE_POD
-          value: '2'
-        - name: SESSION_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: qlab-secret
-              key: session-secret

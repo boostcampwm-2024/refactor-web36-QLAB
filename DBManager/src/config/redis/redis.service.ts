@@ -39,11 +39,15 @@ export class RedisService {
     return this.sessionConnection.hget(key, field);
   }
 
+  async hsetSession(key: string, field: string, value: string): Promise<void> {
+    await this.sessionConnection.hset(key, field, value);
+  }
+
   async hgetPod(key: string, field: string): Promise<string | null> {
     return this.podConnection.hget(key, field);
   }
 
-  async hsetPod(key: string, field: string, value: number): Promise<void> {
+  async hsetPod(key: string, field: string, value: number | string): Promise<void> {
     await this.podConnection.hset(key, field, value);
   }
 
@@ -51,23 +55,29 @@ export class RedisService {
     await this.podConnection.del(key);
   }
 
+  async keysPod() {
+    return this.podConnection.keys('*');
+  }
+
   async subscribeSession(
-    channel: string,
+    listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
-    await this.sessionSubscriber.subscribe(channel);
-    this.sessionSubscriber.on('message', (_, message) => {
-      onMessage(message);
+    await this.sessionSubscriber.subscribe(listening);
+    this.sessionSubscriber.on('message', (channel, message) => {
+      if (channel === listening)
+        onMessage(message);
     });
   }
 
   async subscribeActiveUser(
-    channel: string,
+    listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
-    await this.activeUserSubscriber.subscribe(channel);
-    this.activeUserSubscriber.on('message', (_, message) => {
-      onMessage(message);
+    await this.activeUserSubscriber.subscribe(listening);
+    this.sessionSubscriber.on('message', (channel, message) => {
+      if (channel === listening)
+        onMessage(message);
     });
   }
 }
