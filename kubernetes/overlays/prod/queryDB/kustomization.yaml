@@ -1,0 +1,5 @@
+resouces:
+  - ../../../base/queryDB
+
+patches:
+  - path: deployment-patch.yaml
