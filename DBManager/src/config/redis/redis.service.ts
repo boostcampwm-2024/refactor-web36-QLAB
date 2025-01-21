@@ -59,28 +59,22 @@ export class RedisService {
     return this.podConnection.keys('*');
   }
 
-  async subscribeSession(channel: string): Promise<void> {
-    await this.sessionSubscriber.subscribe(channel);
-  }
-
-  async eventHandlerSession(
+  async subscribeSession(
     listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
+    await this.sessionSubscriber.subscribe(listening);
     this.sessionSubscriber.on('message', (channel, message) => {
       if (channel === listening)
         onMessage(message);
     });
   }
 
-  async subscribeActiveUser(channel: string): Promise<void> {
-    await this.activeUserSubscriber.subscribe(channel);
-  }
-
-  async eventHandlerActiveUser(
+  async subscribeActiveUser(
     listening: string,
     onMessage: (message: string) => void,
   ): Promise<void> {
+    await this.activeUserSubscriber.subscribe(listening);
     this.sessionSubscriber.on('message', (channel, message) => {
       if (channel === listening)
         onMessage(message);
