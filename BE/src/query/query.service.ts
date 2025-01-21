@@ -8,6 +8,7 @@ import { UserDBManager } from '../config/query-database/user-db-manager.service'
 import { UsageService } from 'src/usage/usage.service';
 import { ActiveUserRepository } from 'src/redis/active-user.repository';
 import { ReadyQueueManager } from '../redis/ready-queue.manager';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class QueryService {
@@ -27,7 +28,9 @@ export class QueryService {
   ) {
     this.activeUserRepository.setActiveUser(sessionId);
 
-    await this.readyQueueManager.processQueue(sessionId);
+    const requestId = uuidv4();
+    await this.readyQueueManager.enqueue(requestId, sessionId);
+    await this.readyQueueManager.waitForPriority(requestId, sessionId);
 
     await this.shellService.findShellOrThrow(shellId);
 
