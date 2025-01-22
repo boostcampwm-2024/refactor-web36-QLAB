@@ -20,7 +20,7 @@ export class SessionEventHandler implements OnModuleInit {
     const channel = 'newSession';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       await this.loadBalancer.allocate(sessionId);
-      const podName = await this.redisService.hgetSession(sessionId, 'pod');
+      const podName = await this.redisService.hgetSession(sessionId, 'podIp');
       this.userDBService.initUserDatabase(podName, sessionId);
     });
   }
@@ -28,7 +28,7 @@ export class SessionEventHandler implements OnModuleInit {
   private expiredEventHandler() {
     const channel = '__keyevent@0__:expired';
      this.redisService.subscribeSession(channel, async (sessionId) => {
-      const pod = await this.redisService.hgetSession(sessionId, 'pod');
+      const pod = await this.redisService.hgetSession(sessionId, 'podIp');
       this.userDBService.removeDatabase(pod, sessionId);
     });
   }
