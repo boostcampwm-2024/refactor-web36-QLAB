@@ -84,7 +84,7 @@ export class RedisService {
   }
 
 
-  async flushDB() {
-    await this.podConnection.flushdb();
+  async flushAll() {
+    await this.podConnection.flushall();
   }
 }
