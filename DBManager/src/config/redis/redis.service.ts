@@ -78,7 +78,7 @@ export class RedisService {
     onMessage: (message: string) => void,
   ): Promise<void> {
     await this.activeUserSubscriber.subscribe(listening);
-    this.sessionSubscriber.on('message', (channel, message) => {
+    this.activeUserSubscriber.on('message', (channel, message) => {
       if (channel === listening) onMessage(message);
     });
   }
