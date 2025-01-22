@@ -30,7 +30,7 @@ export class K8SApiService implements OnModuleInit {
     const path = `/api/v1/namespaces/${this.namespace}/pods`;
     const queryParams = {
       allowWatchBookmarks: true,
-      labelSelector: 'app=mysql',
+      labelSelector: 'app=querydb',
     };
     const handlePodEvent = async (type: string, apiObj: any, watchObj: any) => {
       const podName = watchObj.object.metadata.name;
