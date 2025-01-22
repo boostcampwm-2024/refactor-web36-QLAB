@@ -25,6 +25,8 @@ spec:
         volumeMounts:
         - name: querydb-data
           mountPath: /var/lib/mysql
+        args:
+        - "--local-infile=1"
       volumes:
       - name: querydb-data
         emptyDir: {}
