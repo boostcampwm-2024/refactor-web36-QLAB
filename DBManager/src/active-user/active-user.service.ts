@@ -13,7 +13,7 @@ export class ActiveUserService implements OnModuleInit {
   }
 
   private countUp() {
-    const channel = '__keyspace@1__:set';
+    const channel = 'newActiveUser';
     this.redisService.subscribeActiveUser(channel, async (sessionId) => {
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
 

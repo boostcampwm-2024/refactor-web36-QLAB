@@ -9,7 +9,31 @@ export class ActiveUserRepository {
     @Inject('ACTIVE_USER_STORE_CONNECTION')
     private readonly sessionConnection: Redis,
   ) {}
+
+  public async existActiveUser(key: string): Promise<boolean> {
+    const existNum = await this.sessionConnection.exists(key);
+    if (existNum === 0) return false;
+    return true;
+  }
+
   public async setActiveUser(key: string) {
-    this.sessionConnection.expire(key, this.ACTIVE_USER_TTL);
+    await this.sessionConnection.set(key, '');
+  }
+
+  public async setTTLActiveUser(key: string) {
+    await this.sessionConnection.expire(key, this.ACTIVE_USER_TTL);
+  }
+
+  public async newActiveUserPublish(key: string) {
+    return this.sessionConnection.publish('newActiveUser', key);
+  }
+
+  public async updateActiveUser(key: string) {
+    const isActvie = await this.existActiveUser(key);
+    if (!isActvie) {
+      await this.setActiveUser(key);
+      await this.newActiveUserPublish(key);
+    }
+    this.setTTLActiveUser(key);
   }
 }

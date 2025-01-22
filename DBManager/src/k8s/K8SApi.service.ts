@@ -42,7 +42,7 @@ export class K8SApiService implements OnModuleInit {
         await this.redisService.hsetPod(
           podName,
           'podIp',
-          podStatus.podIp || '',
+          podStatus.podIP || '',
         );
       } else if (type === 'MODIFIED' && podStatus.podIP && curPodIp == '') {
         const podIp = podStatus.podIP;

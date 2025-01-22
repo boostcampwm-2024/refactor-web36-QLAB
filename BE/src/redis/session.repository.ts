@@ -48,4 +48,8 @@ export class SessionRepository {
   public async newSessionPublish(key: string) {
     return this.sessionConnection.publish('newSession', key);
   }
+
+  public async getConnectedPod(key: string): Promise<string> {
+    return this.sessionConnection.hget(key, 'pod');
+  }
 }
