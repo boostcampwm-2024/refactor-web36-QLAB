@@ -10,6 +10,7 @@ import { ZodValidationException } from 'nestjs-zod';
 @Catch(Error)
 export class ExceptionHandler implements ExceptionFilter {
   catch(error: Error, host: ArgumentsHost) {
+    console.error(error);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const status =
