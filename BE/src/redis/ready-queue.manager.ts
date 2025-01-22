@@ -23,12 +23,15 @@ export class ReadyQueueManager {
       const rank = await this.redis.zrank(sessionId, requestId);
 
       if (rank === 0) {
-        await this.redis.zrem(sessionId, requestId);
         return true;
       }
 
       await this.sleep(this.INTERVAL);
     }
+  }
+
+  public async dequeue(requestId: string, sessionId: string): Promise<void> {
+    await this.redis.zrem(sessionId, requestId);
   }
 
   private async sleep(ms: number): Promise<void> {

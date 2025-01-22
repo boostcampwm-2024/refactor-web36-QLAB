@@ -41,19 +41,18 @@ describe('ReadyQueueManager', () => {
     expect(keys).toHaveLength(1);
   });
 
-  it('처리된 이벤트는 큐에서 삭제된다.', async () => {
+  it('큐에 생성된 이벤트를 삭제할 수 있다..', async () => {
     // Given
-    const requestId = ['request-id-1', 'request-id-2'];
+    const requestId = 'request-id-1';
     const sessionId = 'test-session';
 
     // When
-    await readyQueueManager.enqueue(requestId[0], sessionId);
-    await readyQueueManager.enqueue(requestId[1], sessionId);
-    await readyQueueManager.waitForPriority(requestId[0], sessionId);
+    await readyQueueManager.enqueue(requestId, sessionId);
+    await readyQueueManager.dequeue(requestId, sessionId);
 
     // Then
     const keys = await redis.zrange(sessionId, 0, -1);
-    expect(keys).toHaveLength(1);
+    expect(keys).toHaveLength(0);
   });
 
   it('이전 요청이 처리되지 않으면 신규 요청은 대기해야 한다.', async () => {
@@ -64,7 +63,7 @@ describe('ReadyQueueManager', () => {
     // When
     await readyQueueManager.enqueue(requestId[0], sessionId);
     await readyQueueManager.enqueue(requestId[1], sessionId);
-    const waitStatus = readyQueueManager.waitForPriority(
+    const isFinished = readyQueueManager.waitForPriority(
       requestId[1],
       sessionId,
     );
@@ -77,17 +76,9 @@ describe('ReadyQueueManager', () => {
       );
     });
 
-    await expect(Promise.race([waitStatus, timeoutPromise])).rejects.toThrow(
+    await expect(Promise.race([isFinished, timeoutPromise])).rejects.toThrow(
       '이전 요청이 처리되지 않아 대기상태입니다.',
     );
-
-    //when
-    await readyQueueManager.waitForPriority(requestId[0], sessionId);
-
-    //then
-    expect(
-      await readyQueueManager.waitForPriority(requestId[1], sessionId),
-    ).toBe(true);
   });
 
   it('다른 세션에 대해서는 독립적이므로 대기하지 않아도 된다.', async () => {
@@ -107,39 +98,39 @@ describe('ReadyQueueManager', () => {
     await expect(isProcessed).resolves.toBe(true);
   });
 
-  // it('polling 방식으로 큐를 확인하므로 요청은 인터벌에 따라 처리된다.', async () => {
-  //   // Given
-  //   const requestId = ['request-id-1', 'request-id-2'];
-  //   const sessionId = 'test-session';
-  //
-  //   // When
-  //   await readyQueueManager.enqueue(requestId[0], sessionId);
-  //   await readyQueueManager.enqueue(requestId[1], sessionId);
-  //   const isProcessed = readyQueueManager.waitForPriority(
-  //     requestId[1],
-  //     sessionId,
-  //   );
-  //   await readyQueueManager.waitForPriority(requestId[0], sessionId);
-  //
-  //   // Then
-  //   const timeoutPromise = new Promise((_, reject) => {
-  //     setTimeout(
-  //       () => reject(new Error('이전 요청이 처리되지 않아 대기상태입니다.')),
-  //       100,
-  //     );
-  //   });
-  //   const timeoutPromise2 = new Promise((_, reject) => {
-  //     setTimeout(
-  //       () => reject(new Error('이전 요청이 처리되지 않아 대기상태입니다.')),
-  //       1000,
-  //     );
-  //   });
-  //
-  //   await expect(Promise.race([isProcessed, timeoutPromise])).rejects.toThrow(
-  //     '이전 요청이 처리되지 않아 대기상태입니다.',
-  //   );
-  //   await expect(Promise.race([isProcessed, timeoutPromise2])).resolves.toBe(
-  //     true,
-  //   );
-  // });
+  it('polling 방식으로 큐를 확인하므로 요청은 인터벌에 따라 처리된다.', async () => {
+    // Given
+    const requestId = ['request-id-1', 'request-id-2'];
+    const sessionId = 'test-session';
+
+    // When
+    await readyQueueManager.enqueue(requestId[0], sessionId);
+    await readyQueueManager.enqueue(requestId[1], sessionId);
+    const isFinished = readyQueueManager.waitForPriority(
+      requestId[1],
+      sessionId,
+    );
+    readyQueueManager.dequeue(requestId[0], sessionId);
+
+    // Then
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error('이전 요청이 처리되지 않아 대기상태입니다.')),
+        100,
+      );
+    });
+    const timeoutPromise2 = new Promise((_, reject) => {
+      setTimeout(
+        () => reject(new Error('이전 요청이 처리되지 않아 대기상태입니다.')),
+        1000,
+      );
+    });
+
+    await expect(Promise.race([isFinished, timeoutPromise])).rejects.toThrow(
+      '이전 요청이 처리되지 않아 대기상태입니다.',
+    );
+    await expect(Promise.race([isFinished, timeoutPromise2])).resolves.toBe(
+      true,
+    );
+  });
 });

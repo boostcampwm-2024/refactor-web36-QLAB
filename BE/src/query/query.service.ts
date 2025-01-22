@@ -63,6 +63,8 @@ export class QueryService {
         text: text,
       };
       return await this.shellService.replace(shellId, updateData);
+    } finally {
+      await this.readyQueueManager.dequeue(requestId, sessionId);
     }
     await this.usageService.updateRowCount(connection, sessionId);
     return await this.shellService.replace(shellId, updateData);
