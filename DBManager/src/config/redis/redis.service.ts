@@ -82,4 +82,9 @@ export class RedisService {
       if (channel === listening) onMessage(message);
     });
   }
+
+
+  async flushDB() {
+    await this.podConnection.flushdb();
+  }
 }

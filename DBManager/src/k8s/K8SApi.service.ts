@@ -16,6 +16,7 @@ export class K8SApiService implements OnModuleInit {
     this.k8sApi = kc.makeApiClient(CoreV1Api);
     this.k8sWatch = new Watch(kc);
     this.startWatchPod();
+    this.redisService.flushDB();
   }
 
   async getPodIp(podName: string): Promise<string> {
@@ -38,6 +39,9 @@ export class K8SApiService implements OnModuleInit {
       const curPodIp = await this.redisService.hgetPod(podName, 'podIp');
 
       if (type === 'ADDED') {
+        console.error('Added');
+        console.error('podName', podName);
+        console.error('curPodIp', curPodIp);
         await this.redisService.hsetPod(podName, 'activeUser', 0);
         await this.redisService.hsetPod(
           podName,
@@ -45,9 +49,15 @@ export class K8SApiService implements OnModuleInit {
           podStatus.podIP || '',
         );
       } else if (type === 'MODIFIED' && podStatus.podIP && curPodIp == '') {
+        console.error('Modified');
+        console.error('podName', podName);
+        console.error('curPodIp', curPodIp);
         const podIp = podStatus.podIP;
         await this.redisService.hsetPod(podName, 'podIp', podIp);
       } else if (type === 'DELETED') {
+        console.error('Deleted');
+        console.error('podName', podName);
+        console.error('curPodIp', curPodIp);
         await this.redisService.delPod(podName);
       }
     };
