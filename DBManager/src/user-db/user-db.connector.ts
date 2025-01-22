@@ -18,8 +18,11 @@ export class UserDBConnector {
 
   private async createConnectionByPod(pod: string) {
     // const domain = `${pod}.default.svc.cluster.local`;
-
+    console.error('QUERY_DB_USER', this.configService.get<string>('QUERY_DB_USER'));
+    console.error('QUERY_DB_PASSWORD', this.configService.get<string>('QUERY_DB_PASSWORD'));
+    console.error('QUERY_DB_PORT', this.configService.get<number>('QUERY_DB_PORT'));
     console.error("createConnectionByPod", pod);
+    console.error()
     return createConnection({
       host: pod,
       user: this.configService.get<string>('QUERY_DB_USER'),
