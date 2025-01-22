@@ -7,30 +7,30 @@ export class ActiveUserRepository {
 
   constructor(
     @Inject('ACTIVE_USER_STORE_CONNECTION')
-    private readonly sessionConnection: Redis,
+    private readonly redisConnection: Redis,
   ) {}
 
   public async existActiveUser(key: string): Promise<boolean> {
-    const existNum = await this.sessionConnection.exists(key);
+    const existNum = await this.redisConnection.exists(key);
     if (existNum === 0) return false;
     return true;
   }
 
   public async setActiveUser(key: string) {
-    await this.sessionConnection.set(key, '');
+    await this.redisConnection.set(key, '');
   }
 
   public async setTTLActiveUser(key: string) {
-    await this.sessionConnection.expire(key, this.ACTIVE_USER_TTL);
+    await this.redisConnection.expire(key, this.ACTIVE_USER_TTL);
   }
 
   public async newActiveUserPublish(key: string) {
-    return this.sessionConnection.publish('newActiveUser', key);
+    return this.redisConnection.publish('newActiveUser', key);
   }
 
   public async updateActiveUser(key: string) {
-    const isActvie = await this.existActiveUser(key);
-    if (!isActvie) {
+    const isActive = await this.existActiveUser(key);
+    if (!isActive) {
       await this.setActiveUser(key);
       await this.newActiveUserPublish(key);
     }

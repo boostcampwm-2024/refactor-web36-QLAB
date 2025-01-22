@@ -7,49 +7,49 @@ export class SessionRepository {
 
   constructor(
     @Inject('SESSION_STORE_CONNECTION')
-    private readonly sessionConnection: Redis,
+    private readonly redisConnection: Redis,
   ) {}
 
   async getSession(key: string) {
     if (!key) {
       return null;
     }
-    return this.sessionConnection.hgetall(key);
+    return this.redisConnection.hgetall(key);
   }
 
   public async existSession(key: string) {
-    return this.sessionConnection.exists(key);
+    return this.redisConnection.exists(key);
   }
 
   public async setNewSession(key: string) {
     const session = await this.existSession(key);
     if (!session) {
-      await this.sessionConnection.hset(key, 'rowCount', 0);
+      await this.redisConnection.hset(key, 'rowCount', 0);
     }
-    await this.sessionConnection.expire(key, this.SESSION_TTL);
+    await this.redisConnection.expire(key, this.SESSION_TTL);
   }
 
   public async deleteSession(key: string) {
-    await this.sessionConnection.del(key);
+    await this.redisConnection.del(key);
   }
 
   public async getRowCount(key: string) {
-    return this.sessionConnection.hget(key, 'rowCount');
+    return this.redisConnection.hget(key, 'rowCount');
   }
 
   public async setRowCount(key: string, rowCount: number) {
-    await this.sessionConnection.hset(key, 'rowCount', rowCount);
+    await this.redisConnection.hset(key, 'rowCount', rowCount);
   }
 
   public async setSessionTTL(key: string) {
-    this.sessionConnection.expire(key, this.SESSION_TTL);
+    this.redisConnection.expire(key, this.SESSION_TTL);
   }
 
   public async newSessionPublish(key: string) {
-    return this.sessionConnection.publish('newSession', key);
+    return this.redisConnection.publish('newSession', key);
   }
 
   public async getConnectedPod(key: string): Promise<string> {
-    return this.sessionConnection.hget(key, 'podIp');
+    return this.redisConnection.hget(key, 'podIp');
   }
 }
