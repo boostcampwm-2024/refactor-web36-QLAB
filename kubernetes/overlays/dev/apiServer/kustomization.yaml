@@ -1,0 +1,6 @@
+resources:
+  - ../../../base/apiServer
+
+patches:
+  - path: deployment-patch.yaml
+  - path: service-patch.yaml

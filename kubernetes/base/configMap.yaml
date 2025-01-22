@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qlab-config
+data:
+  DB_TYPE: "mysql"
+  DB_HOST: "serverdb-service.default"
+  DB_PORT: "3306"
+  DB_USERNAME: "root"
+  DB_DATABASE: "qlabdb"
+
+  QUERY_DB_TYPE: "mysql"
+  QUERY_DB_PORT: "3306"
+  QUERY_DB_USER: "root"
+  QUERY_DB_DATABASE: "qlabdb"
+
+  REDIS_HOST: "redis-service.default"
+  REDIS_PORT: "6379"
+
+  REDIS_DATABASE_SESSION: "0"
+  REDIS_DATABASE_ACTIVE_USER: "1"
+  REDIS_DATABASE_POD: "2"
+
+  LOGGER_DIR: "/logs"
+

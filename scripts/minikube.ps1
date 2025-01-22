@@ -8,6 +8,7 @@ if ($status -eq "Running") {
 & minikube docker-env | Invoke-Expression
 docker build -t local-qlab-apiserver -f ./BE/Dockerfile .
 docker build -t local-qlab-webserver -f ./FE/Dockerfile .
+docker build -t local-qlab-dbmanager -f ./DBManager/Dockerfile .
 
 kubectl config use-context minikube
-kubectl apply -f ./kubernetes/
+kubectl apply -k ./kubernetes/overlays/dev

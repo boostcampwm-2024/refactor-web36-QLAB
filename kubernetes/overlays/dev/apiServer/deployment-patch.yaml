@@ -3,12 +3,10 @@ kind: Deployment
 metadata:
   name: apiserver-deployment
 spec:
-  replicas: 1
   template:
     spec:
-      nodeSelector:
-        node: apiserver
       containers:
       - name: apiserver
-        image: hoon317/qlab-apiserver
-        imagePullPolicy: Always
+        image: local-qlab-apiserver:latest
+        imagePullPolicy: Never
+

@@ -3,12 +3,23 @@ kind: Deployment
 metadata:
   name: apiserver-deployment
 spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: apiserver
   template:
+    metadata:
+      labels:
+        app: apiserver
     spec:
       containers:
       - name: apiserver
-        image: local-qlab-apiserver:latest
-        imagePullPolicy: Never
+        image: hoon317/qlab-apiserver
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef:
+            name: qlab-config
         env:
         - name: DB_PASSWORD
           valueFrom:
@@ -21,3 +32,9 @@ spec:
             secretKeyRef:
               name: qlab-secret
               key: session-secret
+
+        - name: QUERY_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: querydb-password

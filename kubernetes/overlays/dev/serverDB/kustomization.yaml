@@ -1,0 +1,5 @@
+resources:
+  - ../../../base/serverDB
+
+patches:
+  - path: service-patch.yaml

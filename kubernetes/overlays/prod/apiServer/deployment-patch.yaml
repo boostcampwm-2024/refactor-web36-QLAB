@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webserver-deployment
+  name: apiserver-deployment
 spec:
   replicas: 1
   template:
@@ -9,6 +9,6 @@ spec:
       nodeSelector:
         node: apiserver
       containers:
-      - name: webserver
-        image: hoon317/qlab-webserver
+      - name: apiserver
+        image: hoon317/qlab-apiserver:latest
         imagePullPolicy: Always
