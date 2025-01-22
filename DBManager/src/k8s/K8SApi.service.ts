@@ -15,8 +15,8 @@ export class K8SApiService implements OnModuleInit {
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(CoreV1Api);
     this.k8sWatch = new Watch(kc);
+    await this.redisService.flushAll();
     this.startWatchPod();
-    this.redisService.flushAll();
   }
 
   async getPodIp(podName: string): Promise<string> {
