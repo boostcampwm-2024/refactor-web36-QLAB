@@ -5,8 +5,8 @@ import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ResponseDto } from '../common/response/response.dto';
 import { ResRecordDto } from './dto/res-record.dto';
 import { ExecuteRecordSwagger } from '../config/swagger/record-swagger.decorator';
-import { Serialize } from '../interceptors/serialize.interceptor';
-import { UserDBConnectionInterceptor } from '../interceptors/user-db-connection.interceptor';
+import { Serialize } from '../interceptor/serialize.interceptor';
+import { UserDBConnectionInterceptor } from '../interceptor/user-db-connection.interceptor';
 
 @UseInterceptors(UserDBConnectionInterceptor)
 @ApiExtraModels(ResponseDto, ResRecordDto)

@@ -4,7 +4,7 @@ import { Request } from 'express';
 import { ExceptionHandler } from 'src/common/exception/exception.handler';
 import { ApiExtraModels } from '@nestjs/swagger';
 import { ResUsageDto } from './dto/res-usage.dto';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { Serialize } from 'src/interceptor/serialize.interceptor';
 
 @Controller('/api/usage')
 @ApiExtraModels(ResUsageDto)

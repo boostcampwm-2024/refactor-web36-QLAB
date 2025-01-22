@@ -26,17 +26,17 @@ export class UserDBConnectionInterceptor implements NestInterceptor {
     next: CallHandler,
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
-    const identify = request.sessionID;
+    const identify = request.sessionID.substring(0, 10);
     const podName = await this.sessionRepository.getConnectedPod(identify);
     const domain = `${podName}.default.svc.cluster.local`;
 
     try {
       request.dbConnection = await createConnection({
         host: domain,
-        user: identify.substring(0, 10),
+        user: identify,
         password: identify,
         port: this.configService.get<number>('QUERY_DB_PORT', 3306),
-        database: identify.substring(0, 10),
+        database: identify,
         infileStreamFactory: (path) => {
           return createReadStream(path);
         },

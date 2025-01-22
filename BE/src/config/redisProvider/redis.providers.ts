@@ -32,4 +32,10 @@ export const RedisProviders: Provider[] = [
       createRedisConnection(configService, 'REDIS_DATABASE_ACTIVE_USER'),
     inject: [ConfigService],
   },
+  {
+    provide: 'READY_QUEUE_CONNECTION',
+    useFactory: (configService: ConfigService) =>
+      createRedisConnection(configService, 'REDIS_DATABASE_READY_QUEUE'),
+    inject: [ConfigService],
+  },
 ];

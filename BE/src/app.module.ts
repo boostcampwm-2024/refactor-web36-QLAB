@@ -11,7 +11,7 @@ import { ServiceDBModule } from './config/service-database/service-db.module';
 import { RecordModule } from './record/record.module';
 import { TableModule } from './table/table.module';
 import { LoggerModule } from './config/logger/logger.module';
-import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LoggingInterceptor } from './interceptor/logging.interceptor';
 import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';

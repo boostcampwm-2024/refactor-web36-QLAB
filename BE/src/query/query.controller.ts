@@ -13,9 +13,9 @@ import { ResponseDto } from '../common/response/response.dto';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { ResQueryDto } from './dto/res-query.dto';
 import { ExecuteQuerySwagger } from '../config/swagger/query-swagger.decorator';
-import { Serialize } from '../interceptors/serialize.interceptor';
+import { Serialize } from '../interceptor/serialize.interceptor';
 import { ShellGuard } from '../guard/shell.guard';
-import { UserDBConnectionInterceptor } from '../interceptors/user-db-connection.interceptor';
+import { UserDBConnectionInterceptor } from '../interceptor/user-db-connection.interceptor';
 
 @ApiExtraModels(ResponseDto, ResQueryDto)
 @ApiTags('쿼리 API')
