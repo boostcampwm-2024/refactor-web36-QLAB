@@ -25,7 +25,8 @@ export class QueryService {
   ) {
     const isActvie = await this.activeUserRepository.existActiveUser(sessionId);
     if (!isActvie) {
-      this.activeUserRepository.setActiveUser(sessionId);
+      await this.activeUserRepository.setActiveUser(sessionId);
+      await this.activeUserRepository.newActiveUserPublish(sessionId);
     }
     this.activeUserRepository.setTTLActiveUser(sessionId);
     await this.shellService.findShellOrThrow(shellId);

@@ -23,4 +23,8 @@ export class ActiveUserRepository {
   public async setTTLActiveUser(key: string) {
     await this.sessionConnection.expire(key, this.ACTIVE_USER_TTL);
   }
+
+  public async newActiveUserPublish(key: string) {
+    return this.sessionConnection.publish('newActiveUser', key);
+  }
 }
