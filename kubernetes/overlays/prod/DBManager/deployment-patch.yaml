@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        node: dbmanager
+        node: servicedb
       containers:
       - name: dbmanager
         image: hoon317/qlab-dbmanager:latest
