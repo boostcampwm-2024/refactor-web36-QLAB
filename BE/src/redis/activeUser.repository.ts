@@ -27,4 +27,13 @@ export class ActiveUserRepository {
   public async newActiveUserPublish(key: string) {
     return this.sessionConnection.publish('newActiveUser', key);
   }
+
+  public async updateActiveUser(key: string) {
+    const isActvie = await this.existActiveUser(key);
+    if (!isActvie) {
+      await this.setActiveUser(key);
+      await this.newActiveUserPublish(key);
+    }
+    this.setTTLActiveUser(key);
+  }
 }
