@@ -50,6 +50,6 @@ export class SessionRepository {
   }
 
   public async getConnectedPod(key: string): Promise<string> {
-    return this.sessionConnection.hget(key, 'podIp');
+    return this.sessionConnection.hget(key, 'pod');
   }
 }
