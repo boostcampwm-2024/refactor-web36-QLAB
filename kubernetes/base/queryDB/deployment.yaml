@@ -16,7 +16,7 @@ spec:
       - name: querydb
         image: mysql:8.4
         env:
-        - name: QUERY_DB_PASSWORD
+        - name: MYSQL_ROOT_PASSWORD
           value: rootpassword
         - name: MYSQL_DATABASE
           value: qlabdb

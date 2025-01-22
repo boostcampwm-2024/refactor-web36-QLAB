@@ -21,3 +21,9 @@ spec:
         envFrom:
         - configMapRef:
             name: qlab-config
+        env:
+        - name: QUERY_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: qlab-secret
+              key: querydb-password
