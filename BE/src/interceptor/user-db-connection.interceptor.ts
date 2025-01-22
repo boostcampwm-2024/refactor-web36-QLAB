@@ -27,7 +27,12 @@ export class UserDBConnectionInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const identify = request.sessionID.substring(0, 10);
-    const podIp = await this.sessionRepository.getConnectedPod(identify);
+    const podIp = await this.sessionRepository.getConnectedPod(
+      request.sessionID,
+    );
+    console.error('---UserDBConnectionInterceptor---');
+    console.error('podIp', podIp);
+    console.error('sessionId', request.sessionID);
     // const domain = `${podName}.default.svc.cluster.local`;
 
     try {
