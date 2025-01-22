@@ -20,8 +20,8 @@ export class SessionEventHandler implements OnModuleInit {
     const channel = 'newSession';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       await this.loadBalancer.allocate(sessionId);
-      const podIp = await this.redisService.hgetSession(sessionId, 'podIp');
-      this.userDBService.initUserDatabase(podIp, sessionId);
+      const podName = await this.redisService.hgetSession(sessionId, 'pod');
+      this.userDBService.initUserDatabase(podName, sessionId);
     });
   }
 

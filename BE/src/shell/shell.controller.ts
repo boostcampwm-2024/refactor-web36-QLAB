@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { ShellService } from './shell.service';
 import { UpdateShellDto } from './dto/update-shell.dto';
-import { Serialize } from '../interceptors/serialize.interceptor';
+import { Serialize } from '../interceptor/serialize.interceptor';
 import { ResShellDto } from './dto/res-shell.dto';
 import { ApiExtraModels } from '@nestjs/swagger';
 import { ResponseDto } from '../common/response/response.dto';

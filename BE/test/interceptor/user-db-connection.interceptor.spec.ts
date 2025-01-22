@@ -1,4 +1,4 @@
-import { UserDBConnectionInterceptor } from '../../src/interceptors/user-db-connection.interceptor';
+import { UserDBConnectionInterceptor } from '../../src/interceptor/user-db-connection.interceptor';
 import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { MySqlContainer } from '@testcontainers/mysql';
 import { ConfigService } from '@nestjs/config';

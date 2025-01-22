@@ -26,7 +26,7 @@ export class QueryService {
     shellId: number,
     queryDto: QueryDto,
   ) {
-    this.activeUserRepository.setActiveUser(sessionId);
+    await this.activeUserRepository.updateActiveUser(sessionId);
 
     const requestId = uuidv4();
     await this.readyQueueManager.enqueue(requestId, sessionId);

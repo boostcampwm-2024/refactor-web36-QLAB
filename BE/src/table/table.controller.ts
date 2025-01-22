@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Req, UseInterceptors } from '@nestjs/common';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { TableService } from './table.service';
-import { Serialize } from '../interceptors/serialize.interceptor';
+import { Serialize } from '../interceptor/serialize.interceptor';
 import { ResTableDto } from './dto/res-table.dto';
 import { ResTablesDto } from './dto/res-tables.dto';
 import {
@@ -9,7 +9,7 @@ import {
   GetTableSwagger,
 } from '../config/swagger/table-swagger.decorator';
 import { ResponseDto } from '../common/response/response.dto';
-import { UserDBConnectionInterceptor } from '../interceptors/user-db-connection.interceptor';
+import { UserDBConnectionInterceptor } from '../interceptor/user-db-connection.interceptor';
 
 @UseInterceptors(UserDBConnectionInterceptor)
 @ApiExtraModels(ResponseDto, ResTablesDto, ResTableDto)
