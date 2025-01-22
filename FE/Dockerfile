@@ -3,8 +3,6 @@ FROM node:20-alpine AS build
 
 WORKDIR /app/
 
-ENV VITE_BASE_URL=https://www.q-lab.site/api
-
 COPY ./package*.json /app
 
 RUN npm config set registry https://registry.npmjs.org/
@@ -27,6 +25,8 @@ RUN npx vite build
 FROM nginx:alpine
 
 COPY --from=build /app/FE/dist /usr/share/nginx/html
+
+COPY ./FE/conf/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
