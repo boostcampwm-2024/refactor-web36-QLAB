@@ -32,7 +32,7 @@ export class ActiveUserService implements OnModuleInit {
     });
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_SECOND)
   async applyToRedis() {
     for (const [pod, variation] of this.activeUserVariation.entries()) {
       const count = await this.redisService.hgetPod(pod, 'activeUser');
