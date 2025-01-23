@@ -28,9 +28,9 @@ export class QueryService {
   ) {
     await this.activeUserRepository.updateActiveUser(sessionId);
 
-    const requestId = uuidv4();
-    await this.readyQueueManager.enqueue(requestId, sessionId);
-    await this.readyQueueManager.waitForPriority(requestId, sessionId);
+    //const requestId = uuidv4();
+    //await this.readyQueueManager.enqueue(requestId, sessionId);
+   // await this.readyQueueManager.waitForPriority(requestId, sessionId);
 
     await this.shellService.findShellOrThrow(shellId);
 
@@ -64,7 +64,7 @@ export class QueryService {
       };
       return await this.shellService.replace(shellId, updateData);
     } finally {
-      await this.readyQueueManager.dequeue(requestId, sessionId);
+  //    await this.readyQueueManager.dequeue(requestId, sessionId);
     }
     await this.usageService.updateRowCount(connection, sessionId);
     return await this.shellService.replace(shellId, updateData);
