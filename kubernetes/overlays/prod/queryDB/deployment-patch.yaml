@@ -6,13 +6,5 @@ spec:
   replicas: 4
   template:
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: app
-                operator: In
-                values:
-                - querydb
-            topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        node: querydb
