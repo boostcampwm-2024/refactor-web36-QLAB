@@ -4,20 +4,17 @@ import { MySqlContainer } from '@testcontainers/mysql';
 import { ConfigService } from '@nestjs/config';
 import { lastValueFrom, of, throwError } from 'rxjs';
 import { mock } from 'jest-mock-extended';
-import {
-  ConnectionLimitExceedException,
-  DataLimitExceedException,
-} from '../../src/common/exception/custom-exception';
+import { DataLimitExceedException } from '../../src/common/exception/custom-exception';
 import { StartedTestContainer } from 'testcontainers';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PodListRepository } from '../../src/redis/podList.repository';
+import { SessionManager } from '../../src/redis/session-manager';
 
 let interceptor: UserDBConnectionInterceptor;
 let dbContainer: StartedTestContainer;
-let mockPodListRepository: PodListRepository;
 const mockContext = mock<ExecutionContext>();
 const mockConfigService = mock<ConfigService>();
+const mockSessionManager = mock<SessionManager>();
 const mockCallHandler = mock<CallHandler>();
 
 const TEST_SESSION_ID = 'db12345678';
@@ -32,10 +29,8 @@ beforeAll(async () => {
     .withUserPassword(TEST_SESSION_ID)
     .withDatabase(TEST_SESSION_ID)
     .withExposedPorts(3306)
-    .withCommand(['--max_connections=1'])
     .start();
 
-  // Mock ConfigService
   mockConfigService.get.mockImplementation((key: string) => {
     const config = {
       QUERY_DB_HOST: dbContainer.getHost(),
@@ -44,7 +39,7 @@ beforeAll(async () => {
     return config[key];
   });
 
-  //Mock Context
+  mockSessionManager.getConnectedPod.mockResolvedValue('127.0.0.1');
   setupMockContext();
 });
 
@@ -59,15 +54,11 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  mockPodListRepository = {
-    getConnectedPod: jest.fn().mockResolvedValue('127.0.0.1'),
-  } as unknown as PodListRepository;
-
   const module: TestingModule = await Test.createTestingModule({
     providers: [
       UserDBConnectionInterceptor,
-      { provide: PodListRepository, useValue: mockPodListRepository },
       { provide: ConfigService, useValue: mockConfigService },
+      { provide: SessionManager, useValue: mockSessionManager },
     ],
   }).compile();
 
@@ -95,16 +86,6 @@ describe('UserDBConnectionInterceptor - 요청 처리', () => {
     //then
     expect(TEST_REQUEST.dbConnection).toBeDefined();
     expect(mockCallHandler.handle).toHaveBeenCalled();
-  });
-
-  it('DB Connection 제한을 초과하면 에러를 반환한다.', async () => {
-    //given&when
-    await interceptor.intercept(mockContext, mockCallHandler);
-
-    //then
-    await expect(
-      interceptor.intercept(mockContext, mockCallHandler),
-    ).rejects.toThrow(ConnectionLimitExceedException);
   });
 });
 

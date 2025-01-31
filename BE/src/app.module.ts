@@ -28,7 +28,6 @@ import { RedisModule } from './redis/redis.module';
     UserModule,
     ShellModule,
     QueryModule,
-    RedisProviderModule,
     RecordModule,
     TableModule,
     UsageModule,

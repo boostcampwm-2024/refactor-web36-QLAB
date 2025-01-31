@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
 import { RedisProviderModule } from 'src/config/redisProvider/redis-provider.module';
-import { SessionRepository } from './session.repository';
-import { ActiveUserRepository } from './active-user.repository';
-import { PodListRepository } from './podList.repository';
+import { SessionManager } from './session-manager';
+import { ActiveUserManager } from './active-user-manager';
 import { ReadyQueueManager } from './ready-queue.manager';
+import { RateLimiterManager } from './rate-limiter.manager';
 
 @Module({
   imports: [RedisProviderModule],
   providers: [
     ReadyQueueManager,
-    SessionRepository,
-    ActiveUserRepository,
-    PodListRepository,
+    SessionManager,
+    ActiveUserManager,
+    RateLimiterManager,
   ],
   exports: [
     ReadyQueueManager,
-    SessionRepository,
-    ActiveUserRepository,
-    PodListRepository,
+    SessionManager,
+    ActiveUserManager,
+    RateLimiterManager,
   ],
 })
 export class RedisModule {}

@@ -13,7 +13,7 @@ describe('ReadyQueueManager', () => {
     redis = new Redis({
       host: redisContainer.getHost(),
       port: redisContainer.getMappedPort(6379),
-      db: 3,
+      db: 0,
     });
 
     readyQueueManager = new ReadyQueueManager(redis);

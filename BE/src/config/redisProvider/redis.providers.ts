@@ -21,12 +21,6 @@ export const RedisProviders: Provider[] = [
     inject: [ConfigService],
   },
   {
-    provide: 'POD_LIST_STORE_CONNECTION',
-    useFactory: (configService: ConfigService) =>
-      createRedisConnection(configService, 'REDIS_DATABASE_POD'),
-    inject: [ConfigService],
-  },
-  {
     provide: 'ACTIVE_USER_STORE_CONNECTION',
     useFactory: (configService: ConfigService) =>
       createRedisConnection(configService, 'REDIS_DATABASE_ACTIVE_USER'),
@@ -36,6 +30,12 @@ export const RedisProviders: Provider[] = [
     provide: 'READY_QUEUE_CONNECTION',
     useFactory: (configService: ConfigService) =>
       createRedisConnection(configService, 'REDIS_DATABASE_READY_QUEUE'),
+    inject: [ConfigService],
+  },
+  {
+    provide: 'RATE_LIMITER_CONNECTION',
+    useFactory: (configService: ConfigService) =>
+      createRedisConnection(configService, 'REDIS_DATABASE_RATE_LIMITER'),
     inject: [ConfigService],
   },
 ];

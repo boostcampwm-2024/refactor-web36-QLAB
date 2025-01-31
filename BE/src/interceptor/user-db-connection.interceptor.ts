@@ -12,13 +12,13 @@ import {
   ConnectionLimitExceedException,
   DataLimitExceedException,
 } from '../common/exception/custom-exception';
-import { SessionRepository } from 'src/redis/session.repository';
+import { SessionManager } from '../redis/session-manager';
 
 @Injectable()
 export class UserDBConnectionInterceptor implements NestInterceptor {
   constructor(
     private readonly configService: ConfigService,
-    private readonly sessionRepository: SessionRepository,
+    private readonly sessionManager: SessionManager,
   ) {}
 
   async intercept(
@@ -27,13 +27,7 @@ export class UserDBConnectionInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const identify = request.sessionID.substring(0, 10);
-    const podIp = await this.sessionRepository.getConnectedPod(
-      request.sessionID,
-    );
-    console.error('---UserDBConnectionInterceptor---');
-    console.error('podIp', podIp);
-    console.error('sessionId', request.sessionID);
-    // const domain = `${podName}.default.svc.cluster.local`;
+    const podIp = await this.sessionManager.getConnectedPod(request.sessionID);
 
     try {
       request.dbConnection = await createConnection({

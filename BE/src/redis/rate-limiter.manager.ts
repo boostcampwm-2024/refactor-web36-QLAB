@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
-export class PodListRepository {
+export class RateLimiterManager {
   constructor(
-    @Inject('POD_LIST_STORE_CONNECTION')
-    private readonly sessionConnection: Redis,
+    @Inject('RATE_LIMITER_CONNECTION')
+    private readonly redis: Redis,
   ) {}
 }

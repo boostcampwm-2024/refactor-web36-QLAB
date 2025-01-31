@@ -6,7 +6,7 @@ import { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { UsageService } from 'src/usage/usage.service';
-import { ActiveUserRepository } from 'src/redis/active-user.repository';
+import { ActiveUserManager } from 'src/redis/active-user-manager';
 import { ReadyQueueManager } from '../redis/ready-queue.manager';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -16,7 +16,7 @@ export class QueryService {
     private readonly userDBManager: UserDBManager,
     private shellService: ShellService,
     private readonly usageService: UsageService,
-    private readonly activeUserRepository: ActiveUserRepository,
+    private readonly activeUserRepository: ActiveUserManager,
     private readonly readyQueueManager: ReadyQueueManager,
   ) {}
 

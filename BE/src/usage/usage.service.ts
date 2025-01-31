@@ -3,14 +3,14 @@ import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { Connection } from 'mysql2/promise';
-import { SessionRepository } from '../redis/session.repository';
+import { SessionManager } from '../redis/session-manager';
 
 @Injectable()
 export class UsageService {
   MAX_ROW_COUNT = 1000000;
   constructor(
     private readonly userDBManager: UserDBManager,
-    private readonly sessionRepository: SessionRepository,
+    private readonly sessionRepository: SessionManager,
     private readonly tableService: TableService,
   ) {}
 
