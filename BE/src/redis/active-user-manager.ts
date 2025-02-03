@@ -25,13 +25,11 @@ export class ActiveUserManager {
   }
 
   public async newActiveUserPublish(key: string) {
-    console.log('newActiveUser Event publish');
     return this.redis.publish('newActiveUser', key);
   }
 
   public async updateActiveUser(key: string) {
     const isActive = await this.existActiveUser(key);
-    console.log('updateActive User, isActive: ', isActive);
     if (!isActive) {
       await this.setActiveUser(key);
       await this.newActiveUserPublish(key);

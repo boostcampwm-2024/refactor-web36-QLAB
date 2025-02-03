@@ -15,9 +15,7 @@ export class ActiveUserService implements OnModuleInit {
   private countUp() {
     const channel = 'newActiveUser';
     this.redisService.subscribeActiveUser(channel, async (sessionId) => {
-      console.log('activeUser', sessionId);
       const pod = await this.redisService.hgetSession(sessionId, 'pod');
-      console.log('activeUser-pod', pod);
       const currentCount = this.activeUserVariation.get(pod) ?? 0;
       this.activeUserVariation.set(pod, currentCount + 1);
     });

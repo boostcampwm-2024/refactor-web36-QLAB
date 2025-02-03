@@ -98,16 +98,12 @@ export class K8SApiService implements OnModuleInit {
 
     for (const pod of podList.body.items) {
       const podName = pod.metadata.name;
-      console.log(podName);
 
       const podInfo = await this.k8sApi.readNamespacedPod(
         podName,
         this.namespace,
       );
-      const podIp = podInfo.body.status.podIP;
-      console.log(podIp);
-
-      podResult[podName] = podIp;
+      podResult[podName] = podInfo.body.status.podIP;
     }
     return {
       podCnt: Object.keys(podResult).length,
