@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ShellGuard } from './shell.guard';
 import { ShellModule } from '../shell/shell.module';
+import { RateLimiterGuard } from './rate-limiter.guard';
+import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [ShellModule],
-  providers: [ShellGuard],
+  imports: [ShellModule, RedisModule],
+  providers: [ShellGuard, RateLimiterGuard],
 })
 export class GuardModule {}

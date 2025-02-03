@@ -23,3 +23,15 @@ export class ConnectionLimitExceedException extends HttpException {
     );
   }
 }
+
+export class RateLimitExceedException extends HttpException {
+  constructor() {
+    super(
+      {
+        status: HttpStatus.TOO_MANY_REQUESTS,
+        message: 'Too many request right now! Please try again soon.',
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+}

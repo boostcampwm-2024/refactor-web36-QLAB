@@ -6,7 +6,6 @@ import { Shell } from 'src/shell/shell.entity';
 import { User } from 'src/user/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SessionMiddleware } from './middleware/session.middleware';
-import { RedisProviderModule } from './config/redisProvider/redis-provider.module';
 import { ServiceDBModule } from './config/service-database/service-db.module';
 import { RecordModule } from './record/record.module';
 import { TableModule } from './table/table.module';
