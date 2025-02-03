@@ -7,8 +7,6 @@ import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../config/query-database/user-db-manager.service';
 import { UsageService } from 'src/usage/usage.service';
 import { ActiveUserManager } from 'src/redis/active-user-manager';
-import { ReadyQueueManager } from '../redis/ready-queue.manager';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class QueryService {
@@ -17,7 +15,6 @@ export class QueryService {
     private shellService: ShellService,
     private readonly usageService: UsageService,
     private readonly activeUserRepository: ActiveUserManager,
-    private readonly readyQueueManager: ReadyQueueManager,
   ) {}
 
   async execute(
@@ -27,10 +24,6 @@ export class QueryService {
     queryDto: QueryDto,
   ) {
     await this.activeUserRepository.updateActiveUser(sessionId);
-
-    const requestId = uuidv4();
-    await this.readyQueueManager.enqueue(requestId, sessionId);
-    await this.readyQueueManager.waitForPriority(requestId, sessionId);
 
     await this.shellService.findShellOrThrow(shellId);
 
@@ -63,8 +56,6 @@ export class QueryService {
         text: text,
       };
       return await this.shellService.replace(shellId, updateData);
-    } finally {
-      await this.readyQueueManager.dequeue(requestId, sessionId);
     }
     await this.usageService.updateRowCount(connection, sessionId);
     return await this.shellService.replace(shellId, updateData);
@@ -128,7 +119,6 @@ export class QueryService {
       lastQueryRunTime = Math.round(lastQueryRunTime * 1000) / 1000 || 0;
       return lastQueryRunTime.toFixed(3);
     } catch (e) {
-      console.error(e);
       return '0.000';
     }
   }

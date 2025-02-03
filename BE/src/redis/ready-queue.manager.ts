@@ -11,7 +11,7 @@ export class ReadyQueueManager {
   ) {}
 
   public async enqueue(requestId: string, sessionId: string): Promise<void> {
-    const timeStamp = new Date().getTime();
+    const timeStamp = Date.now();
     this.redis.zadd(sessionId, timeStamp, requestId);
   }
 
