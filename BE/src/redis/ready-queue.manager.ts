@@ -11,8 +11,7 @@ export class ReadyQueueManager {
   ) {}
 
   public async enqueue(requestId: string, sessionId: string): Promise<void> {
-    const timeStamp = Date.now();
-    this.redis.zadd(sessionId, timeStamp, requestId);
+    await this.redis.rpush(sessionId, requestId);
   }
 
   public async waitForPriority(
@@ -20,18 +19,14 @@ export class ReadyQueueManager {
     sessionId: string,
   ): Promise<boolean> {
     while (true) {
-      const rank = await this.redis.zrank(sessionId, requestId);
-
-      if (rank === 0) {
-        return true;
-      }
-
+      const firstRequest = await this.redis.lindex(sessionId, 0);
+      if (firstRequest === requestId) return;
       await this.sleep(this.INTERVAL);
     }
   }
 
-  public async dequeue(requestId: string, sessionId: string): Promise<void> {
-    await this.redis.zrem(sessionId, requestId);
+  public async dequeue(sessionId: string): Promise<void> {
+    await this.redis.lpop(sessionId);
   }
 
   private async sleep(ms: number): Promise<void> {

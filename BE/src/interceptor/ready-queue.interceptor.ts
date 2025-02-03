@@ -26,7 +26,7 @@ export class ReadyQueueInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       finalize(async () => {
-        await this.readyQueueManager.dequeue(requestId, sessionId);
+        await this.readyQueueManager.dequeue(sessionId);
       }),
     );
   }
