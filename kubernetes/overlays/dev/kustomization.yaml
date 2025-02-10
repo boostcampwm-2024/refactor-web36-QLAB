@@ -4,6 +4,7 @@ resources:
   - ./serverDB
   - ./webServer
   - ./DBManager
+  - ./queryDB
   - ../../base
 
 patches:
