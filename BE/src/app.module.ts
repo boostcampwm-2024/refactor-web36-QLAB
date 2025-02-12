@@ -16,6 +16,7 @@ import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { RedisModule } from './redis/redis.module';
+import { NginxService } from './nginx/nginx.service';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { RedisModule } from './redis/redis.module';
       provide: APP_PIPE,
       useClass: ZodValidationPipe,
     },
+    NginxService,
   ],
 })
 export class AppModule {
