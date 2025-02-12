@@ -46,13 +46,13 @@ RUN ./configure --with-http_ssl_module --with-http_v2_module --with-http_realip_
 # 기존 Nginx 제거 및 새로 빌드한 Nginx 사용
 RUN rm -rf /etc/nginx /usr/sbin/nginx && ln -s /usr/local/nginx/sbin/nginx /usr/sbin/nginx
 
-RUN mkdir /usr/local/nginx/conf.d
+RUN mkdir -p /etc/nginx/conf.d
 
 COPY --from=build /app/FE/dist /usr/share/nginx/html
 
 COPY ./FE/conf/nginx.conf /usr/local/nginx/conf/nginx.conf
 
-COPY ./FE/conf/default.conf /usr/local/nginx/conf.d/default.conf
+COPY ./FE/conf/default.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
