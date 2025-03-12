@@ -5,7 +5,7 @@ import { SessionEventHandler } from './session-event.handler';
 import { LoadBalancerModule } from 'src/loadBalancer/load-balancer.module';
 
 @Module({
-  imports: [RedisModule, UserDBModule,LoadBalancerModule],
+  imports: [RedisModule, UserDBModule, LoadBalancerModule],
   providers: [SessionEventHandler],
 })
 export class SessionEventModule {}

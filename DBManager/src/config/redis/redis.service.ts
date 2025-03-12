@@ -55,6 +55,10 @@ export class RedisService {
     await this.podConnection.hset(key, field, value);
   }
 
+  async hIncrPod(key: string, field: string, value: number | string) {
+    await this.podConnection.hincrby(key, field, value);
+  }
+
   async delPod(key: string): Promise<void> {
     await this.podConnection.del(key);
   }
@@ -82,7 +86,6 @@ export class RedisService {
       if (channel === listening) onMessage(message);
     });
   }
-
 
   async flushAll() {
     await this.podConnection.flushall();
