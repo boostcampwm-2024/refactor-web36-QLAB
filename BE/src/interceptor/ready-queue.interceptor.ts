@@ -18,11 +18,11 @@ export class ReadyQueueInterceptor implements NestInterceptor {
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
 
-    const requestId = uuidv4();
+    const timestamp = Date.now();
     const sessionId = request.sessionID;
 
-    await this.readyQueueManager.enqueue(requestId, sessionId);
-    await this.readyQueueManager.waitForPriority(requestId, sessionId);
+    await this.readyQueueManager.enqueue(timestamp, sessionId);
+    await this.readyQueueManager.waitForPriority(timestamp, sessionId);
 
     return next.handle().pipe(
       finalize(async () => {

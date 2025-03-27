@@ -10,17 +10,25 @@ export class ReadyQueueManager {
     private readonly redis: Redis,
   ) {}
 
-  public async enqueue(requestId: string, sessionId: string): Promise<void> {
-    await this.redis.rpush(sessionId, requestId);
+  public async enqueue(timestamp: number, sessionId: string): Promise<void> {
+    await this.redis.rpush(sessionId, timestamp);
   }
 
   public async waitForPriority(
-    requestId: string,
+    timestamp: number,
     sessionId: string,
-  ): Promise<boolean> {
+  ): Promise<void> {
     while (true) {
       const firstRequest = await this.redis.lindex(sessionId, 0);
-      if (firstRequest === requestId) return;
+      if (firstRequest === timestamp.toString()) return;
+
+      const ONE_MINUTE_AGO = Date.now() - 60000;
+
+      if (timestamp < ONE_MINUTE_AGO) {
+        await this.redis.lpop(sessionId);
+        continue;
+      }
+
       await this.sleep(this.INTERVAL);
     }
   }
