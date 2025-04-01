@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UserDBManager } from '../config/query-database/user-db-manager.service';
-import { Connection, RowDataPacket } from 'mysql2/promise';
+import { UserDBManager } from '../user-database/user-db.manager';
+import { RowDataPacket } from 'mysql2/promise';
 import { ColumnDto, ResTableDto } from './dto/res-table.dto';
 import { ResTablesDto } from './dto/res-tables.dto';
 
@@ -8,30 +8,27 @@ import { ResTablesDto } from './dto/res-tables.dto';
 export class TableService {
   constructor(private readonly userDBManager: UserDBManager) {}
 
-  async findAll(connection: Connection, sessionId: string) {
-    const tables = await this.getTables(connection, sessionId);
+  async findAll(sessionId: string) {
+    const tables = await this.getTables(sessionId);
 
     const tableList: ResTableDto[] = [];
     for (const tableName of tables) {
-      const columnDtos = await this.getColumns(connection, tableName);
+      const columnDtos = await this.getColumns(sessionId, tableName);
       const resTableDto = new ResTableDto(tableName, columnDtos);
       tableList.push(resTableDto);
     }
     return new ResTablesDto(tableList);
   }
 
-  async find(connection: Connection, tableName: string) {
-    const columns = await this.getColumns(connection, tableName);
+  async find(sessionId: string, tableName: string) {
+    const columns = await this.getColumns(sessionId, tableName);
     return new ResTableDto(tableName, columns);
   }
 
-  async getTables(
-    connection: Connection,
-    sessionId: string,
-  ): Promise<string[]> {
+  async getTables(sessionId: string): Promise<string[]> {
     const query = `SHOW TABLES`;
     const result = (await this.userDBManager.run(
-      connection,
+      sessionId,
       query,
     )) as RowDataPacket[];
 
@@ -41,10 +38,10 @@ export class TableService {
     return result.map((row) => row[key]);
   }
 
-  async getColumns(connection: Connection, tableName: string) {
+  async getColumns(sessionId: string, tableName: string) {
     const query = `SHOW FULL COLUMNS FROM ${tableName}`;
     const result = (await this.userDBManager.run(
-      connection,
+      sessionId,
       query,
     )) as RowDataPacket[];
     return result.map(

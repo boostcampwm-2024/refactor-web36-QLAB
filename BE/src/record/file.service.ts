@@ -8,11 +8,12 @@ import {
   RANDOM_DATA_TEMP_DIR,
   RECORD_PROCESS_BATCH_SIZE,
 } from './constant/random-record.constant';
-import { UserDBManager } from '../config/query-database/user-db-manager.service';
+import { UserDBManager } from '../user-database/user-db.manager';
 import { RandomColumnModel } from './random-column.entity';
 import * as path from 'node:path';
-import { Connection, ResultSetHeader } from 'mysql2/promise';
+import { ResultSetHeader } from 'mysql2/promise';
 import * as crypto from 'node:crypto';
+
 @Injectable()
 export class FileService implements OnModuleInit {
   constructor(private readonly userDBManager: UserDBManager) {}
@@ -55,7 +56,7 @@ export class FileService implements OnModuleInit {
   }
 
   async loadCsvToDB(
-    connection: Connection,
+    sessionId: string,
     csvFilePath: string,
     tableName: string,
     columnNames: string[],
@@ -71,7 +72,7 @@ export class FileService implements OnModuleInit {
 
     try {
       queryResult = (await this.userDBManager.run(
-        connection,
+        sessionId,
         query,
       )) as ResultSetHeader;
       return queryResult.affectedRows;

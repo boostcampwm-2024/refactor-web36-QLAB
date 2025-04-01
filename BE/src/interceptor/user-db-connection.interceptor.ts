@@ -4,62 +4,32 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { createConnection } from 'mysql2/promise';
-import { ConfigService } from '@nestjs/config';
-import { catchError, finalize, Observable, tap } from 'rxjs';
-import { createReadStream } from 'fs';
-import {
-  ConnectionLimitExceedException,
-  DataLimitExceedException,
-} from '../common/exception/custom-exception';
-import { SessionManager } from '../redis/session-manager';
+import { catchError, Observable, tap } from 'rxjs';
+import { DataLimitExceedException } from '../common/exception/custom-exception';
+import { UserDBManager } from '../user-database/user-db.manager';
 
 @Injectable()
 export class UserDBConnectionInterceptor implements NestInterceptor {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly sessionManager: SessionManager,
-  ) {}
+  constructor(private readonly userDBManager: UserDBManager) {}
 
   async intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
-    const identify = request.sessionID.substring(0, 10);
-    const podIp = await this.sessionManager.getConnectedPod(request.sessionID);
-
-    try {
-      request.dbConnection = await createConnection({
-        host: podIp,
-        user: identify,
-        password: identify,
-        port: this.configService.get<number>('QUERY_DB_PORT', 3306),
-        database: identify,
-        infileStreamFactory: (path) => {
-          return createReadStream(path);
-        },
-      });
-    } catch (err) {
-      if (err.errno == 1040) {
-        throw new ConnectionLimitExceedException();
-      }
-      throw err;
-    }
-
-    await request.dbConnection.query('set profiling = 1');
-    await request.dbConnection.beginTransaction();
+    await this.userDBManager.createConnection(request.sessionID);
+    await this.userDBManager.run(request.sessionID, 'set profiling = 1');
+    await this.userDBManager.startTransaction(request.sessionID);
 
     return next.handle().pipe(
       tap(async () => {
-        await request.dbConnection.commit();
+        await this.userDBManager.commit(request.sessionID);
       }),
       catchError(async (err) => {
         if (err instanceof DataLimitExceedException)
-          await request.dbConnection.rollback();
+          await this.userDBManager.rollback(request.sessionID);
         throw err;
       }),
-      finalize(async () => await request.dbConnection.end()),
     );
   }
 }

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {Inject, Injectable} from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
-export class SessionManager {
+export class SessionRepository {
   private readonly SESSION_TTL = 60 * 30;
 
-  constructor(private readonly redis: Redis) {}
+  constructor(@Inject('REDIS_PROVIDER') private readonly redis: Redis) {}
 
   async getSession(sessionId: string) {
     if (!sessionId) {

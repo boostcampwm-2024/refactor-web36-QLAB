@@ -4,9 +4,8 @@ import { QueryType } from '../common/enums/query-type.enum';
 import { ShellService } from '../shell/shell.service';
 import { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
-import { UserDBManager } from '../config/query-database/user-db-manager.service';
+import { UserDBManager } from '../user-database/user-db.manager';
 import { UsageService } from 'src/usage/usage.service';
-import { ActiveUserManager } from 'src/redis/active-user-manager';
 
 @Injectable()
 export class QueryService {
@@ -14,15 +13,9 @@ export class QueryService {
     private readonly userDBManager: UserDBManager,
     private shellService: ShellService,
     private readonly usageService: UsageService,
-    private readonly activeUserRepository: ActiveUserManager,
   ) {}
 
-  async execute(
-    connection: Connection,
-    sessionId: string,
-    shellId: number,
-    queryDto: QueryDto,
-  ) {
+  async execute(sessionId: string, shellId: number, queryDto: QueryDto) {
     await this.shellService.findShellOrThrow(shellId);
 
     const baseUpdateData = {
@@ -40,7 +33,7 @@ export class QueryService {
         });
       }
       updateData = await this.processQuery(
-        connection,
+        sessionId,
         baseUpdateData,
         queryDto.query,
       );
@@ -55,19 +48,19 @@ export class QueryService {
       };
       return await this.shellService.replace(shellId, updateData);
     }
-    await this.usageService.updateRowCount(connection, sessionId);
+    await this.usageService.updateRowCount(sessionId);
     return await this.shellService.replace(shellId, updateData);
   }
 
   private async processQuery(
-    connection: Connection,
+    sessionId: string,
     baseUpdateData: any,
     query: string,
   ): Promise<Partial<Shell>> {
     const isResultTable = this.existResultTable(baseUpdateData.queryType);
 
-    const rows = await this.userDBManager.run(connection, query);
-    const runTime = await this.measureQueryRunTime(connection);
+    const rows = await this.userDBManager.run(sessionId, query);
+    const runTime = await this.measureQueryRunTime(sessionId);
 
     let text: string;
     let resultTable: RowDataPacket[];
@@ -106,11 +99,14 @@ export class QueryService {
     return validTypes.includes(type);
   }
 
-  async measureQueryRunTime(connection: Connection): Promise<string> {
+  /*
+    TODO 다중 쿼리 가능하면 맨 마지막 쿼리 기준으로
+  */
+  async measureQueryRunTime(sessionId: string): Promise<string> {
     try {
       const query = `SHOW PROFILES`;
       const rows = (await this.userDBManager.run(
-        connection,
+        sessionId,
         query,
       )) as RowDataPacket[];
       let lastQueryRunTime = rows[rows.length - 1]?.Duration;
@@ -121,9 +117,6 @@ export class QueryService {
     }
   }
 
-  /*
-  TODO 다중 쿼리 가능하면 맨 마지막 쿼리 기준으로
-   */
   private detectQueryType(query: string): QueryType | undefined {
     const trimmedQuery = query.trim().toUpperCase();
     const queryType = Object.keys(this.queryTypeMap).find((type) =>

@@ -15,7 +15,8 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { RedisModule } from './redis/redis.module';
+import { RedisModule } from './rate-limiter/redis.module';
+import { SessionModule } from './session/session.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { RedisModule } from './redis/redis.module';
     UsageModule,
     LoggerModule,
     RedisModule,
+    SessionModule,
   ],
   providers: [
     {

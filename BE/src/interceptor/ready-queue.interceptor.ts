@@ -5,8 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { finalize, Observable } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
-import { ReadyQueueManager } from '../redis/ready-queue.manager';
+import { ReadyQueueManager } from '../rate-limiter/ready-queue.manager';
 
 @Injectable()
 export class ReadyQueueInterceptor implements NestInterceptor {

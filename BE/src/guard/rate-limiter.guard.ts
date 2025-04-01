@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { RateLimiterManager } from '../redis/rate-limiter.manager';
+import { RateLimiterManager } from '../rate-limiter/rate-limiter.manager';
 import { RateLimitExceedException } from '../common/exception/custom-exception';
 
 @Injectable()

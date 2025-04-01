@@ -14,7 +14,7 @@ data:
   QUERY_DB_USER: "root"
   QUERY_DB_DATABASE: "qlabdb"
 
-  REDIS_HOST: "redis-service.default"
+  REDIS_HOST: "rate-limiter-service.default"
   REDIS_PORT: "6379"
 
   REDIS_DATABASE_SESSION: "0"

@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
 export class ReadyQueueManager {
   private readonly INTERVAL = 300;
 
-  constructor(private readonly redis: Redis) {}
+  constructor(@Inject('REDIS_PROVIDER') private readonly redis: Redis) {}
 
   public async enqueue(timestamp: number, sessionId: string): Promise<void> {
     await this.redis.rpush(sessionId, timestamp);

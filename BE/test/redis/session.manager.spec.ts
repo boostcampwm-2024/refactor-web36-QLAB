@@ -1,9 +1,9 @@
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import Redis from 'ioredis';
-import { SessionManager } from '../../src/redis/session-manager';
+import { SessionRepository } from '../../src/session/session-repository.service';
 
 describe('SessionRepository', () => {
-  let sessionManager: SessionManager;
+  let sessionManager: SessionRepository;
   let redis: Redis;
   let redisContainer: StartedRedisContainer;
 
@@ -16,7 +16,7 @@ describe('SessionRepository', () => {
       db: 0,
     });
 
-    sessionManager = new SessionManager(redis);
+    sessionManager = new SessionRepository(redis);
   });
 
   beforeEach(async () => {

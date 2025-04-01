@@ -15,7 +15,6 @@ import {
 import { UsageService } from '../usage/usage.service';
 import { FileService } from './file.service';
 import { TableService } from '../table/table.service';
-import { Connection } from 'mysql2/promise';
 
 @Injectable()
 export class RecordService {
@@ -26,11 +25,10 @@ export class RecordService {
   ) {}
 
   async insertRandomRecord(
-    connection: Connection,
     sessionId: string,
     createRandomRecordDto: CreateRandomRecordDto,
   ): Promise<ResRecordDto> {
-    await this.validateDto(createRandomRecordDto, connection);
+    await this.validateDto(createRandomRecordDto, sessionId);
 
     const columnEntities: RandomColumnModel[] = createRandomRecordDto.columns
       .filter((column) => column.type !== 'default')
@@ -42,7 +40,7 @@ export class RecordService {
       createRandomRecordDto.count,
     );
     const affectedRows = await this.fileService.loadCsvToDB(
-      connection,
+      sessionId,
       csvFilePath,
       createRandomRecordDto.tableName,
       columnNames,
@@ -50,7 +48,7 @@ export class RecordService {
 
     await this.fileService.deleteFile(csvFilePath);
 
-    await this.usageService.updateRowCount(connection, sessionId);
+    await this.usageService.updateRowCount(sessionId);
 
     return new ResRecordDto({
       status: affectedRows === createRandomRecordDto.count,
@@ -86,10 +84,10 @@ export class RecordService {
 
   private async validateDto(
     createRandomRecordDto: CreateRandomRecordDto,
-    connection: Connection,
+    sessionId: string,
   ) {
     const tableInfo = await this.tableService.find(
-      connection,
+      sessionId,
       createRandomRecordDto.tableName,
     );
 

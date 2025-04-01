@@ -24,7 +24,6 @@ export class RecordController {
     @Body() randomRecordInsertDto: CreateRandomRecordDto,
   ) {
     return this.recordService.insertRandomRecord(
-      req.dbConnection,
       req.sessionID,
       randomRecordInsertDto,
     );

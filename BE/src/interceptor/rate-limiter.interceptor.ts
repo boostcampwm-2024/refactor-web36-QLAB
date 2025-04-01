@@ -4,7 +4,7 @@ import {
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import { RateLimiterManager } from '../redis/rate-limiter.manager';
+import { RateLimiterManager } from '../rate-limiter/rate-limiter.manager';
 import { finalize, Observable } from 'rxjs';
 import { Connection } from 'mysql2/promise';
 

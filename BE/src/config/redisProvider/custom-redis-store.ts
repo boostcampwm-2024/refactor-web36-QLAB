@@ -1,8 +1,8 @@
 import { SessionData, Store } from 'express-session';
-import { SessionManager } from 'src/redis/session-manager';
+import { SessionRepository } from 'src/session/session-repository.service';
 
 export class CustomRedisStore extends Store {
-  constructor(private readonly sessionRepository: SessionManager) {
+  constructor(private readonly sessionRepository: SessionRepository) {
     super();
   }
 

@@ -22,13 +22,13 @@ export class TableController {
   @Serialize(ResTablesDto)
   @Get('/tables')
   async findAll(@Req() req: any) {
-    return await this.tableService.findAll(req.dbConnection, req.sessionID);
+    return await this.tableService.findAll(req.sessionID);
   }
 
   @GetTableSwagger()
   @Serialize(ResTableDto)
   @Get('/tables/:tableName')
   async find(@Req() req: any, @Param('tableName') tableName: string) {
-    return await this.tableService.find(req.dbConnection, tableName);
+    return await this.tableService.find(req.sessionID, tableName);
   }
 }

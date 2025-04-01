@@ -1,7 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { winstonConfig } from './winston.config';
 import { WinstonModule } from 'nest-winston';
-import { timestamp } from 'rxjs';
 
 export interface RequestInfo {
   timestamp: string;

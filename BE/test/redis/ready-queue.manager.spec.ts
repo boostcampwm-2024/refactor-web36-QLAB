@@ -1,6 +1,6 @@
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import Redis from 'ioredis';
-import { ReadyQueueManager } from '../../src/redis/ready-queue.manager';
+import { ReadyQueueManager } from '../../src/rate-limiter/ready-queue.manager';
 
 describe('ReadyQueueManager', () => {
   let redisContainer: StartedRedisContainer;

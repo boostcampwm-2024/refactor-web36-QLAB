@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
-import { UserDBManager } from '../config/query-database/user-db-manager.service';
-import { Connection } from 'mysql2/promise';
-import { SessionManager } from '../redis/session-manager';
+import { UserDBManager } from '../user-database/user-db.manager';
+import { SessionRepository } from '../session/session-repository.service';
 
 @Injectable()
 export class UsageService {
   MAX_ROW_COUNT = 1000000;
   constructor(
     private readonly userDBManager: UserDBManager,
-    private readonly sessionRepository: SessionManager,
+    private readonly sessionRepository: SessionRepository,
     private readonly tableService: TableService,
   ) {}
 
@@ -22,11 +21,8 @@ export class UsageService {
     };
   }
 
-  public async updateRowCount(connection: Connection, sessionId: string) {
-    const tableList: string[] = await this.tableService.getTables(
-      connection,
-      sessionId,
-    );
+  public async updateRowCount(sessionId: string) {
+    const tableList: string[] = await this.tableService.getTables(sessionId);
     if (tableList.length === 0) {
       await this.sessionRepository.setRowCount(sessionId, 0);
       return {
@@ -35,7 +31,7 @@ export class UsageService {
       };
     }
     const query = this.createSumQuery(tableList);
-    const result = await this.userDBManager.run(connection, query);
+    const result = await this.userDBManager.run(sessionId, query);
     const rowCount = parseInt(result[0].total_rows, 10);
 
     if (rowCount > this.MAX_ROW_COUNT) throw new DataLimitExceedException();

@@ -8,13 +8,13 @@ import { DataLimitExceedException } from '../../src/common/exception/custom-exce
 import { StartedTestContainer } from 'testcontainers';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SessionManager } from '../../src/redis/session-manager';
+import { SessionRepository } from '../../src/session/session-repository.service';
 
 let interceptor: UserDBConnectionInterceptor;
 let dbContainer: StartedTestContainer;
 const mockContext = mock<ExecutionContext>();
 const mockConfigService = mock<ConfigService>();
-const mockSessionManager = mock<SessionManager>();
+const mockSessionManager = mock<SessionRepository>();
 const mockCallHandler = mock<CallHandler>();
 
 const TEST_SESSION_ID = 'db12345678';
@@ -58,7 +58,7 @@ beforeEach(async () => {
     providers: [
       UserDBConnectionInterceptor,
       { provide: ConfigService, useValue: mockConfigService },
-      { provide: SessionManager, useValue: mockSessionManager },
+      { provide: SessionRepository, useValue: mockSessionManager },
     ],
   }).compile();
 
