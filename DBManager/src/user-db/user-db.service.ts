@@ -6,7 +6,7 @@ import * as console from 'node:console';
 export class UserDBService {
   constructor(private readonly userDBConnector: UserDBConnector) {}
 
-  public async initUserDatabase(pod: string, sessionId: string) {
+  public async initUserDatabase(podIp: string, sessionId: string) {
     try {
       const identify = sessionId.substring(0, 10);
       const connectInfo = {
@@ -16,7 +16,7 @@ export class UserDBService {
         database: identify,
       };
 
-      const connection = await this.userDBConnector.getConnection(pod);
+      const connection = await this.userDBConnector.createConnection(podIp);
 
       await connection.query(`create database ${connectInfo.database};`);
       await connection.query(
@@ -25,14 +25,16 @@ export class UserDBService {
       await connection.query(
         `grant all privileges on ${connectInfo.database}.* to '${connectInfo.name}'@'${connectInfo.host}';`,
       );
+
+      await connection.end();
     } catch (e) {
       console.error(e);
     }
   }
 
-  public async removeDatabase(pod: string, sessionId: string) {
+  public async removeDatabase(podIp: string, sessionId: string) {
     try {
-      const connection = await this.userDBConnector.getConnection(pod);
+      const connection = await this.userDBConnector.createConnection(podIp);
 
       const identify = sessionId.substring(0, 10);
 
@@ -40,6 +42,8 @@ export class UserDBService {
       await connection.query(dropDatabase);
       const dropUser = `drop user '${identify}'`;
       await connection.query(dropUser);
+
+      await connection.end();
     } catch (e) {
       console.error(e);
     }
