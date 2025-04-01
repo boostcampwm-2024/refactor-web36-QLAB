@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { QueryDto } from './dto/query.dto';
 import { QueryType } from '../common/enums/query-type.enum';
 import { ShellService } from '../shell/shell.service';
-import { Connection, ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../user-database/user-db.manager';
 import { UsageService } from 'src/usage/usage.service';
