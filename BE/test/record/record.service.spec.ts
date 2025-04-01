@@ -7,14 +7,12 @@ import { FileService } from '../../src/record/file.service';
 import { CreateRandomRecordDto } from '../../src/record/dto/create-random-record.dto';
 import { ResTableDto } from '../../src/table/dto/res-table.dto';
 import { BadRequestException } from '@nestjs/common';
-import { Connection } from 'mysql2/promise';
 
 const TEST_SESSION_ID = 'db12345678';
 
 const mockFileService = mock<FileService>();
 const mockTableService = mock<TableService>();
 const mockUsageService = mock<UsageService>();
-const mockConnection = mock<Connection>();
 
 describe('RecordService', () => {
   let recordService: RecordService;
@@ -56,11 +54,7 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.insertRandomRecord(
-        mockConnection,
-        TEST_SESSION_ID,
-        TEST_BODY,
-      ),
+      recordService.insertRandomRecord(TEST_SESSION_ID, TEST_BODY),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -79,11 +73,7 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.insertRandomRecord(
-        mockConnection,
-        TEST_SESSION_ID,
-        TEST_BODY,
-      ),
+      recordService.insertRandomRecord(TEST_SESSION_ID, TEST_BODY),
     ).rejects.toThrow(BadRequestException);
   });
 
@@ -102,11 +92,7 @@ describe('RecordService', () => {
 
     // then
     await expect(
-      recordService.insertRandomRecord(
-        mockConnection,
-        TEST_SESSION_ID,
-        TEST_BODY,
-      ),
+      recordService.insertRandomRecord(TEST_SESSION_ID, TEST_BODY),
     ).rejects.toThrow(BadRequestException);
   });
 });

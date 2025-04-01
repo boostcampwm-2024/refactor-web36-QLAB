@@ -35,7 +35,11 @@ describe('ReadyQueueManager', () => {
     const responseTime = 1;
 
     // When
-    await rateLimiterManager.addResponseTime(requestTime,sessionId, responseTime);
+    await rateLimiterManager.addResponseTime(
+      requestTime,
+      sessionId,
+      responseTime,
+    );
 
     // Then
     const count = await redis.zcount(sessionId, '-inf', '+inf');
