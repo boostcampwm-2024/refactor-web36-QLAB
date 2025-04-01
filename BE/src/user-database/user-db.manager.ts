@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Connection, createConnection, QueryResult } from 'mysql2/promise';
-import { SessionRepository } from '../session/session-repository.service';
+import { SessionRepository } from '../session/session.manager';
 import { createReadStream } from 'fs';
 import { ConfigService } from '@nestjs/config';
 

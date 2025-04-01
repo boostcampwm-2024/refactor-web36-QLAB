@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
 import { UserDBManager } from '../user-database/user-db.manager';
-import { SessionRepository } from '../session/session-repository.service';
+import { SessionRepository } from '../session/session.manager';
 
 @Injectable()
 export class UsageService {

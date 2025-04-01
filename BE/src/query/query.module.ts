@@ -6,7 +6,7 @@ import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
 import { UserDBModule } from '../user-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
-import { RateLimiterModule } from 'src/rate-limiter/rateLimiterModule';
+import { RateLimiterModule } from 'src/rate-limiter/rate-limiter.module';
 
 @Module({
   imports: [

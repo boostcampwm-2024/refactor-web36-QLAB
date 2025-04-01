@@ -5,7 +5,7 @@ import { UserDBModule } from '../user-database/user-db.moudle';
 import { UsageModule } from '../usage/usage.module';
 import { TableModule } from 'src/table/table.module';
 import { FileService } from './file.service';
-import { RateLimiterModule } from 'src/rate-limiter/rateLimiterModule';
+import { RateLimiterModule } from 'src/rate-limiter/rate-limiter.module';
 
 @Module({
   imports: [RateLimiterModule, UserDBModule, UsageModule, TableModule],

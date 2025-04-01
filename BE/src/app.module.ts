@@ -15,7 +15,7 @@ import { APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { UsageModule } from './usage/usage.module';
 import { ConfigModule } from '@nestjs/config';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { RateLimiterModule } from './rate-limiter/rateLimiterModule';
+import { RateLimiterModule } from './rate-limiter/rate-limiter.module';
 import { SessionModule } from './session/session.module';
 
 @Module({
