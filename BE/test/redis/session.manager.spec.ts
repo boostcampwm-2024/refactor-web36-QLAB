@@ -34,7 +34,7 @@ describe('SessionRepository', () => {
 
     // when
     // 새로운 세션을 생성한다
-    await sessionManager.setNewSession(newSessionId);
+    await sessionManager.setSession(newSessionId);
 
     // then
     // redis에 해당 세션이 등록된다
@@ -45,11 +45,11 @@ describe('SessionRepository', () => {
   it('세션 저장소에 이미 존재하는 세션 ID의 경우, setNewSession 메서드를 통해 새로운 세션 정보를 등록하지 않는다.', async () => {
     // given
     const existingSession = 'testKey';
-    await sessionManager.setNewSession(existingSession);
+    await sessionManager.setSession(existingSession);
     const keyCountBefore = await redis.keys('*');
 
     // when
-    await sessionManager.setNewSession(existingSession);
+    await sessionManager.setSession(existingSession);
 
     // then
     const keyCountAfter = await redis.keys('*');
@@ -59,7 +59,7 @@ describe('SessionRepository', () => {
   it('getSession 메서드를 통해 Redis에 등록한 세션 정보를 조회할 수 있다.', async () => {
     // given
     const mockKey = 'testKey';
-    await sessionManager.setNewSession(mockKey);
+    await sessionManager.setSession(mockKey);
 
     // when
     const session = await sessionManager.getSession(mockKey);

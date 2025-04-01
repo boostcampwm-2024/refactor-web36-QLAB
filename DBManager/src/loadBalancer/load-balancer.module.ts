@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { LoadBalancer } from './load-balancer';
-import { RedisModule } from 'src/config/redis/redis.module';
+import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [RedisModule],

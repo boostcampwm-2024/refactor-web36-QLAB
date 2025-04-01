@@ -1,4 +1,4 @@
-import { RedisService } from '../config/redis/redis.service';
+import { RedisService } from '../redis/redis.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserDBService } from '../user-db/user-db.service';
 import { LoadBalancer } from 'src/loadBalancer/load-balancer';
@@ -20,16 +20,23 @@ export class SessionEventHandler implements OnModuleInit {
     const channel = 'newSession';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       await this.loadBalancer.allocate(sessionId);
-      const podName = await this.redisService.hgetSession(sessionId, 'podIp');
-      this.userDBService.initUserDatabase(podName, sessionId);
+      const podIp = await this.redisService.getPodIpBySessionId(sessionId);
+      await this.userDBService.initUserDatabase(podIp, sessionId);
+      await this.redisService.incrActiveUser(podIp);
     });
   }
 
   private expiredEventHandler() {
     const channel = '__keyevent@0__:expired';
-     this.redisService.subscribeSession(channel, async (sessionId) => {
-      const pod = await this.redisService.hgetSession(sessionId, 'podIp');
-      this.userDBService.removeDatabase(pod, sessionId);
+    this.redisService.subscribeSession(channel, async (key) => {
+      if (key.startsWith('session:expiring:')) {
+        const sessionId = key.split(':')[2];
+        const podIp = await this.redisService.getPodIpBySessionId(sessionId);
+
+        await this.userDBService.removeDatabase(podIp, key);
+        await this.redisService.decrActiveUser(podIp);
+        await this.redisService.removeSession(podIp);
+      }
     });
   }
 }

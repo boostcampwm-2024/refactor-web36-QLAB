@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -6,10 +6,7 @@ export class RateLimiterManager {
   private readonly TIME_WINDOW_MS = 60 * 1000;
   private readonly MAX_ALLOWED_DURATION_SEC = 20;
 
-  constructor(
-    @Inject('RATE_LIMITER_CONNECTION')
-    private readonly redis: Redis,
-  ) {}
+  constructor(private readonly redis: Redis) {}
 
   public async getRemainTime(sessionId: string): Promise<number> {
     const currentTime = Date.now();

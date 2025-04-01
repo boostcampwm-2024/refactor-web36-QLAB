@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { RedisService } from 'src/config/redis/redis.service';
+import { RedisService } from 'src/redis/redis.service';
 import { CoreV1Api, KubeConfig, Watch } from '@kubernetes/client-node';
 
 @Injectable()
@@ -15,16 +15,7 @@ export class K8SApiService implements OnModuleInit {
     kc.loadFromDefault();
     this.k8sApi = kc.makeApiClient(CoreV1Api);
     this.k8sWatch = new Watch(kc);
-    await this.redisService.flushAll();
     this.startWatchPod();
-  }
-
-  async getPodIp(podName: string): Promise<string> {
-    const podInfo = await this.k8sApi.readNamespacedPod(
-      podName,
-      this.namespace,
-    );
-    return podInfo.body.status.podIP || 'Pending';
   }
 
   startWatchPod() {
@@ -34,31 +25,12 @@ export class K8SApiService implements OnModuleInit {
       labelSelector: 'app=querydb',
     };
     const handlePodEvent = async (type: string, apiObj: any, watchObj: any) => {
-      const podName = watchObj.object.metadata.name;
-      const podStatus = watchObj.object.status;
-      const curPodIp = await this.redisService.hgetPod(podName, 'podIp');
+      const podIp = watchObj.object.status.podIP;
 
-      if (type === 'ADDED') {
-        console.error('Added');
-        console.error('podName', podName);
-        console.error('curPodIp', curPodIp);
-        await this.redisService.hsetPod(podName, 'activeUser', 0);
-        await this.redisService.hsetPod(
-          podName,
-          'podIp',
-          podStatus.podIP || '',
-        );
-      } else if (type === 'MODIFIED' && podStatus.podIP && curPodIp == '') {
-        console.error('Modified');
-        console.error('podName', podName);
-        console.error('curPodIp', curPodIp);
-        const podIp = podStatus.podIP;
-        await this.redisService.hsetPod(podName, 'podIp', podIp);
+      if ((type == 'ADDED' || type === 'MODIFIED') && podIp) {
+        await this.redisService.initActiveUser(podIp);
       } else if (type === 'DELETED') {
-        console.error('Deleted');
-        console.error('podName', podName);
-        console.error('curPodIp', curPodIp);
-        await this.redisService.delPod(podName);
+        await this.redisService.delPod(podIp);
       }
     };
 

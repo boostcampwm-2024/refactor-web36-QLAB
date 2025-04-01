@@ -23,8 +23,6 @@ export class QueryService {
     shellId: number,
     queryDto: QueryDto,
   ) {
-    await this.activeUserRepository.updateActiveUser(sessionId);
-
     await this.shellService.findShellOrThrow(shellId);
 
     const baseUpdateData = {

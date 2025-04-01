@@ -28,7 +28,6 @@ export class CustomRedisStore extends Store {
 
   async destroy(sid: string, cb: (err?: any) => void): Promise<void> {
     try {
-      await this.sessionRepository.deleteSession(sid);
       return cb();
     } catch (err) {
       cb(err);
