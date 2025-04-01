@@ -6,6 +6,7 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
 import { UserDBManager } from '../user-database/user-db.manager';
 import { UsageService } from 'src/usage/usage.service';
+import {BadColumnQueryException} from "../common/exception/custom-exception";
 
 @Injectable()
 export class QueryService {
@@ -17,6 +18,7 @@ export class QueryService {
 
   async execute(sessionId: string, shellId: number, queryDto: QueryDto) {
     await this.shellService.findShellOrThrow(shellId);
+    this.checkColumnTypes(queryDto.query);
 
     const baseUpdateData = {
       sessionId: sessionId,
@@ -89,19 +91,6 @@ export class QueryService {
     };
   }
 
-  private existResultTable(type: QueryType) {
-    const validTypes: QueryType[] = [
-      QueryType.SELECT,
-      QueryType.EXPLAIN,
-      QueryType.SHOW,
-      QueryType.DESCRIBE,
-    ];
-    return validTypes.includes(type);
-  }
-
-  /*
-    TODO 다중 쿼리 가능하면 맨 마지막 쿼리 기준으로
-  */
   async measureQueryRunTime(sessionId: string): Promise<string> {
     try {
       const query = `SHOW PROFILES`;
@@ -115,6 +104,37 @@ export class QueryService {
     } catch (e) {
       return '0.000';
     }
+  }
+
+  private checkColumnTypes(query: string) {
+    const FORBIDDEN_COLUMN_TYPES = [
+      'TEXT',
+      'MEDIUMTEXT',
+      'LONGTEXT',
+      'BLOB',
+      'MEDIUMBLOB',
+      'LONGBLOB',
+      'JSON',
+    ];
+
+    const upperQuery = query.toUpperCase();
+
+    for (const type of FORBIDDEN_COLUMN_TYPES) {
+      const pattern = new RegExp(`\\b${type}\\b`, 'i');
+      if (pattern.test(upperQuery)) {
+        throw new BadColumnQueryException(type);
+      }
+    }
+  }
+
+  private existResultTable(type: QueryType) {
+    const validTypes: QueryType[] = [
+      QueryType.SELECT,
+      QueryType.EXPLAIN,
+      QueryType.SHOW,
+      QueryType.DESCRIBE,
+    ];
+    return validTypes.includes(type);
   }
 
   private detectQueryType(query: string): QueryType | undefined {

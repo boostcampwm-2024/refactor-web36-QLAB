@@ -12,14 +12,14 @@ export class DataLimitExceedException extends HttpException {
   }
 }
 
-export class ConnectionLimitExceedException extends HttpException {
-  constructor() {
+export class BadColumnQueryException extends HttpException {
+  constructor(columnType: string) {
     super(
       {
-        status: HttpStatus.TOO_MANY_REQUESTS,
-        message: 'Too many users right now! Please try again soon.',
+        status: HttpStatus.BAD_REQUEST,
+        message: `The column type '${columnType}' is not allowed.`,
       },
-      HttpStatus.TOO_MANY_REQUESTS,
+      HttpStatus.BAD_REQUEST,
     );
   }
 }
