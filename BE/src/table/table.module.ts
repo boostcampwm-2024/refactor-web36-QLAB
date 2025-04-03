@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TableService } from './table.service';
 import { TableController } from './table.controller';
-import { UserDBModule } from '../user-database/user-db.moudle';
-import { RateLimiterModule } from 'src/rate-limiter/rate-limiter.module';
+import { UserDBModule } from '../interceptor/user-database/user-db.moudle';
+import { RateLimiterModule } from 'src/interceptor/rate-limiter/rate-limiter.module';
 
 @Module({
   imports: [UserDBModule, RateLimiterModule],

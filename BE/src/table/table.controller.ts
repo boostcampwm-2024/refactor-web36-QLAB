@@ -9,7 +9,7 @@ import {
   GetTableSwagger,
 } from '../config/swagger/table-swagger.decorator';
 import { ResponseDto } from '../common/response/response.dto';
-import { UserDBConnectionInterceptor } from '../interceptor/user-db-connection.interceptor';
+import { UserDBConnectionInterceptor } from '../interceptor/user-database/user-db-connection.interceptor';
 
 @UseInterceptors(UserDBConnectionInterceptor)
 @ApiExtraModels(ResponseDto, ResTablesDto, ResTableDto)

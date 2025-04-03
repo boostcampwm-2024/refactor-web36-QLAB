@@ -5,8 +5,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { catchError, Observable, tap } from 'rxjs';
-import { DataLimitExceedException } from '../common/exception/custom-exception';
-import { UserDBManager } from '../user-database/user-db.manager';
+import { DataLimitExceedException } from '../../common/exception/custom-exception';
+import { UserDBManager } from './user-db.manager';
 
 @Injectable()
 export class UserDBConnectionInterceptor implements NestInterceptor {

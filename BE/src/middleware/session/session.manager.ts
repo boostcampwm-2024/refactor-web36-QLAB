@@ -1,4 +1,4 @@
-import {Inject, Injectable} from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -17,8 +17,9 @@ export class SessionRepository {
   public async setSession(sessionId: string) {
     const session = await this.redis.exists('session:' + sessionId);
     if (!session) {
+      await this.redis.publish('newSession', sessionId);
       await this.redis.set('session:expiring:' + sessionId, '');
-      await this.redis.hset(sessionId, 'rowCount', 0);
+      await this.redis.hset('session:' + sessionId, 'rowCount', 0);
     }
     await this.redis.expire('session:expiring:' + sessionId, this.SESSION_TTL);
   }

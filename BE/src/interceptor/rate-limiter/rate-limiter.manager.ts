@@ -12,9 +12,17 @@ export class RateLimiterManager {
     const currentTime = Date.now();
     const minTime = currentTime - this.TIME_WINDOW_MS;
 
-    await this.redis.zremrangebyscore(sessionId, '-inf', minTime);
+    await this.redis.zremrangebyscore(
+      'rate-limiter:' + sessionId,
+      '-inf',
+      minTime,
+    );
 
-    const responseTimeList = await this.redis.zrange(sessionId, 0, -1);
+    const responseTimeList = await this.redis.zrange(
+      'rate-limiter:' + sessionId,
+      0,
+      -1,
+    );
 
     return (
       this.MAX_ALLOWED_DURATION_SEC -
@@ -29,6 +37,6 @@ export class RateLimiterManager {
     sessionId: string,
     responseTime: number,
   ): Promise<void> {
-    this.redis.zadd(sessionId, requestTime, responseTime);
+    this.redis.zadd('rate-limiter:' + sessionId, requestTime, responseTime);
   }
 }

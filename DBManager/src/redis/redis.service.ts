@@ -43,7 +43,7 @@ export class RedisService {
   }
 
   async getMinActivUserPod() {
-    return this.redisConnection.zrange('activeUser', 0, 0)[0];
+    return (await this.redisConnection.zrange('activeUser', 0, 0))[0];
   }
 
   async removeSession(sessionId: string): Promise<void> {

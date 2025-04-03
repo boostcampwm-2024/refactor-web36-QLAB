@@ -4,9 +4,9 @@ import { QueryController } from './query.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
-import { UserDBModule } from '../user-database/user-db.moudle';
+import { UserDBModule } from '../interceptor/user-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
-import { RateLimiterModule } from 'src/rate-limiter/rate-limiter.module';
+import { RateLimiterModule } from 'src/interceptor/rate-limiter/rate-limiter.module';
 
 @Module({
   imports: [

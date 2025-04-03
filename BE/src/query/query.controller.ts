@@ -15,9 +15,9 @@ import { ResQueryDto } from './dto/res-query.dto';
 import { ExecuteQuerySwagger } from '../config/swagger/query-swagger.decorator';
 import { Serialize } from '../interceptor/serialize.interceptor';
 import { ShellGuard } from '../guard/shell.guard';
-import { UserDBConnectionInterceptor } from '../interceptor/user-db-connection.interceptor';
+import { UserDBConnectionInterceptor } from '../interceptor/user-database/user-db-connection.interceptor';
 import { RateLimiterGuard } from '../guard/rate-limiter.guard';
-import { RateLimiterInterceptor } from '../interceptor/rate-limiter.interceptor';
+import { RateLimiterInterceptor } from '../interceptor/rate-limiter/rate-limiter.interceptor';
 
 @ApiExtraModels(ResponseDto, ResQueryDto)
 @ApiTags('쿼리 API')

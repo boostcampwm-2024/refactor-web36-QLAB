@@ -1,6 +1,6 @@
 import { RedisContainer, StartedRedisContainer } from '@testcontainers/redis';
 import Redis from 'ioredis';
-import { SessionRepository } from '../../src/session/session.manager';
+import { SessionRepository } from '../../src/middleware/session/session.manager';
 
 describe('SessionRepository', () => {
   let sessionManager: SessionRepository;

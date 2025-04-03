@@ -4,9 +4,9 @@ import { QueryType } from '../common/enums/query-type.enum';
 import { ShellService } from '../shell/shell.service';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
-import { UserDBManager } from '../user-database/user-db.manager';
+import { UserDBManager } from '../interceptor/user-database/user-db.manager';
 import { UsageService } from 'src/usage/usage.service';
-import {BadColumnQueryException} from "../common/exception/custom-exception";
+import { BadColumnQueryException } from '../common/exception/custom-exception';
 
 @Injectable()
 export class QueryService {
