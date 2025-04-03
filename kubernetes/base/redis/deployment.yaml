@@ -13,18 +13,15 @@ spec:
         app: redis
     spec:
       containers:
-      - name: rate-limiter
-        image: redis:7.4-alpine
-        ports:
-        - containerPort: 6379
-        volumeMounts:
-        - name: rate-limiter-data
-          mountPath: /data
-        command:
-        - "rate-limiter-server"
-        - "--appendonly"
-        - "yes"
+        - name: redis
+          image: redis:7.4-alpine
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          args: ["--appendonly", "yes"]
       volumes:
-      - name: rate-limiter-data
-        persistentVolumeClaim:
-          claimName: rate-limiter-pvc
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-pvc

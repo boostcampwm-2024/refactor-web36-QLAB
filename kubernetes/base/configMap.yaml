@@ -12,16 +12,9 @@ data:
   QUERY_DB_TYPE: "mysql"
   QUERY_DB_PORT: "3306"
   QUERY_DB_USER: "root"
-  QUERY_DB_DATABASE: "qlabdb"
 
-  REDIS_HOST: "rate-limiter-service.default"
+  REDIS_HOST: "redis-service.default"
   REDIS_PORT: "6379"
-
-  REDIS_DATABASE_SESSION: "0"
-  REDIS_DATABASE_ACTIVE_USER: "1"
-  REDIS_DATABASE_POD: "2"
-  REDIS_DATABASE_READY_QUEUE: "3"
-  REDIS_DATABASE_RATE_LIMITER: "4"
 
   LOGGER_DIR: "/logs"
 
