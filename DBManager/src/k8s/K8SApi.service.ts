@@ -26,12 +26,12 @@ export class K8SApiService implements OnModuleInit {
     };
     const handlePodEvent = async (type: string, apiObj: any, watchObj: any) => {
       const podName = watchObj.object.metadata.name;
-      const podDns = `${podName}.querydb.default.svc.cluster.local`;
+      const podDNS = `${podName}.querydb.default.svc.cluster.local`;
 
       if ((type == 'ADDED' || type === 'MODIFIED') && podName) {
-        await this.redisService.initActiveUser(podDns);
+        await this.redisService.initActiveUser(podDNS);
       } else if (type === 'DELETED') {
-        await this.redisService.delPod(podDns);
+        await this.redisService.delPod(podDNS);
       }
     };
 

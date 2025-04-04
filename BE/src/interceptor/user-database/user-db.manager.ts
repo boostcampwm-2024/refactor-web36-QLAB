@@ -15,6 +15,12 @@ export class UserDBManager {
 
   async run(sessionId: string, query: string): Promise<QueryResult> {
     const connection = this.connectionMap.get(sessionId);
+    try {
+      await connection.ping();
+    } catch (err) {
+      this.connectionMap.delete(sessionId);
+      await this.createConnection(sessionId);
+    }
     const [result] = await connection.query(query);
     return result;
   }
