@@ -21,10 +21,10 @@ export class UserDBManager {
 
   async createConnection(sessionId: string): Promise<void> {
     if (!this.connectionMap.has(sessionId)) {
-      const podIp = await this.sessionRepository.getConnectedPod(sessionId);
+      const podDNS = await this.sessionRepository.getConnectedPod(sessionId);
       const identify = sessionId.substring(0, 10);
       const connection = await createConnection({
-        host: podIp,
+        host: podDNS,
         user: identify,
         password: identify,
         port: this.configService.get<number>('QUERY_DB_PORT', 3306),

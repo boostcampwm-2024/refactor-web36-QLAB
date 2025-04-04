@@ -18,28 +18,28 @@ export class RedisService {
     });
   }
 
-  async getPodIpBySessionId(sessionId: string): Promise<string | null> {
-    return this.redisConnection.hget('session:' + sessionId, 'podIp');
+  async getPodDNSBySessionId(sessionId: string): Promise<string | null> {
+    return this.redisConnection.hget('session:' + sessionId, 'podDNS');
   }
 
-  async setPodIp(sessionId: string, podIp: string): Promise<void> {
-    await this.redisConnection.hset('session:' + sessionId, 'podIp', podIp);
+  async setPodDNS(sessionId: string, podDNS: string): Promise<void> {
+    await this.redisConnection.hset('session:' + sessionId, 'podDNS', podDNS);
   }
 
-  async incrActiveUser(podIp: string): Promise<void> {
-    await this.redisConnection.zincrby('activeUser', 1, podIp);
+  async incrActiveUser(podDNS: string): Promise<void> {
+    await this.redisConnection.zincrby('activeUser', 1, podDNS);
   }
 
-  async decrActiveUser(podIp: string): Promise<void> {
-    await this.redisConnection.zincrby('activeUser', -1, podIp);
+  async decrActiveUser(podDNS: string): Promise<void> {
+    await this.redisConnection.zincrby('activeUser', -1, podDNS);
   }
 
-  async initActiveUser(podIp: string): Promise<void> {
-    await this.redisConnection.zadd('activeUser', 0, podIp);
+  async initActiveUser(podDNS: string): Promise<void> {
+    await this.redisConnection.zadd('activeUser', 0, podDNS);
   }
 
-  async delPod(podIp: string): Promise<void> {
-    await this.redisConnection.zrem('activeUser', podIp);
+  async delPod(podDNS: string): Promise<void> {
+    await this.redisConnection.zrem('activeUser', podDNS);
   }
 
   async getMinActivUserPod() {

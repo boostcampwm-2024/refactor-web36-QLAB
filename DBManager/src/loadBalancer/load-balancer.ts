@@ -5,7 +5,7 @@ import { RedisService } from 'src/redis/redis.service';
 export class LoadBalancer {
   constructor(private readonly redisService: RedisService) {}
   async allocate(sessionId: string) {
-    const selectedPodIp = await this.redisService.getMinActivUserPod();
-    await this.redisService.setPodIp(sessionId, selectedPodIp);
+    const selectedPodDNS = await this.redisService.getMinActivUserPod();
+    await this.redisService.setPodDNS(sessionId, selectedPodDNS);
   }
 }

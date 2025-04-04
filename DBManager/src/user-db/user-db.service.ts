@@ -6,7 +6,7 @@ import * as console from 'node:console';
 export class UserDBService {
   constructor(private readonly userDBConnector: UserDBConnector) {}
 
-  public async initUserDatabase(podIp: string, sessionId: string) {
+  public async initUserDatabase(podDNS: string, sessionId: string) {
     try {
       const identify = sessionId.substring(0, 10);
       const connectInfo = {
@@ -16,7 +16,7 @@ export class UserDBService {
         database: identify,
       };
 
-      const connection = await this.userDBConnector.createConnection(podIp);
+      const connection = await this.userDBConnector.createConnection(podDNS);
 
       await connection.query(`create database ${connectInfo.database};`);
       await connection.query(
@@ -32,9 +32,9 @@ export class UserDBService {
     }
   }
 
-  public async removeDatabase(podIp: string, sessionId: string) {
+  public async removeDatabase(podDNS: string, sessionId: string) {
     try {
-      const connection = await this.userDBConnector.createConnection(podIp);
+      const connection = await this.userDBConnector.createConnection(podDNS);
 
       const identify = sessionId.substring(0, 10);
 

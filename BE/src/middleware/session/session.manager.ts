@@ -33,6 +33,6 @@ export class SessionRepository {
   }
 
   public async getConnectedPod(sessionId: string): Promise<string> {
-    return this.redis.hget('session:' + sessionId, 'podIp');
+    return this.redis.hget('session:' + sessionId, 'podDNS');
   }
 }

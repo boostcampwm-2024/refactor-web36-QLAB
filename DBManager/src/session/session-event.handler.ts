@@ -20,9 +20,9 @@ export class SessionEventHandler implements OnModuleInit {
     const channel = 'newSession';
     this.redisService.subscribeSession(channel, async (sessionId) => {
       await this.loadBalancer.allocate(sessionId);
-      const podIp = await this.redisService.getPodIpBySessionId(sessionId);
-      await this.userDBService.initUserDatabase(podIp, sessionId);
-      await this.redisService.incrActiveUser(podIp);
+      const podDNS = await this.redisService.getPodDNSBySessionId(sessionId);
+      await this.userDBService.initUserDatabase(podDNS, sessionId);
+      await this.redisService.incrActiveUser(podDNS);
     });
   }
 
@@ -31,11 +31,11 @@ export class SessionEventHandler implements OnModuleInit {
     this.redisService.subscribeSession(channel, async (key) => {
       if (key.startsWith('session:expiring:')) {
         const sessionId = key.split(':')[2];
-        const podIp = await this.redisService.getPodIpBySessionId(sessionId);
+        const podDNS = await this.redisService.getPodDNSBySessionId(sessionId);
 
-        await this.userDBService.removeDatabase(podIp, key);
-        await this.redisService.decrActiveUser(podIp);
-        await this.redisService.removeSession(podIp);
+        await this.userDBService.removeDatabase(podDNS, key);
+        await this.redisService.decrActiveUser(podDNS);
+        await this.redisService.removeSession(podDNS);
       }
     });
   }

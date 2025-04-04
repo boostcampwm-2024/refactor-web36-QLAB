@@ -25,12 +25,13 @@ export class K8SApiService implements OnModuleInit {
       labelSelector: 'app=querydb',
     };
     const handlePodEvent = async (type: string, apiObj: any, watchObj: any) => {
-      const podIp = watchObj.object.status.podIP;
+      const podName = watchObj.object.metadata.name;
+      const podDns = `${podName}.querydb.default.svc.cluster.local`;
 
-      if ((type == 'ADDED' || type === 'MODIFIED') && podIp) {
-        await this.redisService.initActiveUser(podIp);
+      if ((type == 'ADDED' || type === 'MODIFIED') && podName) {
+        await this.redisService.initActiveUser(podDns);
       } else if (type === 'DELETED') {
-        await this.redisService.delPod(podIp);
+        await this.redisService.delPod(podDns);
       }
     };
 
