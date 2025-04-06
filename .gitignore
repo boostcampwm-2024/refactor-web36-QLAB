@@ -136,3 +136,5 @@ BE/csvTemp
 .idea
 
 .DS_Store
+
+**/secret.yaml
