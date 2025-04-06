@@ -3,4 +3,3 @@ resources:
 
 patches:
   - path: deployment-patch.yaml
-  - path: service-patch.yaml

@@ -6,9 +6,17 @@ spec:
   replicas: 1
   template:
     spec:
-      nodeSelector:
-        node: apiserver
       containers:
       - name: apiserver
-        image: hoon317/qlab-apiserver:latest
+        image: choco181/qlab-apiserver:latest
         imagePullPolicy: Always
+        envFrom:
+          - configMapRef:
+              name: qlab-config
+          - secretRef:
+              name: qlab-secret
+      nodeSelector:
+        ncloud.com/nks-nodepool: server-nodepool
+  selector:
+    matchLabels:
+      app: apiserver

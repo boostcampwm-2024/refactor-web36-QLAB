@@ -3,4 +3,4 @@ kind: Service
 metadata:
   name: serverdb-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP

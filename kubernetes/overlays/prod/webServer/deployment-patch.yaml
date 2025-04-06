@@ -6,9 +6,9 @@ spec:
   replicas: 1
   template:
     spec:
-      nodeSelector:
-        node: apiserver
       containers:
       - name: webserver
-        image: hoon317/qlab-webserver:latest
+        image: choco181/qlab-webserver:latest
         imagePullPolicy: Always
+      nodeSelector:
+        ncloud.com/nks-nodepool: server-nodepool

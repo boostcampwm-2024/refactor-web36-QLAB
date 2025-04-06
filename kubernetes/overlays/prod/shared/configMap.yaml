@@ -13,8 +13,9 @@ data:
   QUERY_DB_PORT: "3306"
   QUERY_DB_USER: "root"
 
+  MYSQL_DATABASE: "qlabdb"
+
   REDIS_HOST: "redis-service.default"
   REDIS_PORT: "6379"
 
   LOGGER_DIR: "/logs"
-

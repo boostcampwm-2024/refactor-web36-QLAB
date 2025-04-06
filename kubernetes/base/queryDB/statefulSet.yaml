@@ -1,22 +1,10 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: querydb
-spec:
-  clusterIP: None
-  selector:
-    app: querydb
-  ports:
-    - port: 3306
-      targetPort: 3306
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: querydb
 spec:
   serviceName: querydb
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
       app: querydb
@@ -28,11 +16,6 @@ spec:
       containers:
         - name: querydb
           image: mysql:8.3
-          env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: rootpassword
-            - name: MYSQL_DATABASE
-              value: qlabdb
           ports:
             - containerPort: 3306
           volumeMounts:
@@ -44,7 +27,7 @@ spec:
     - metadata:
         name: querydb-data
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 1Gi
+            storage: 10Gi

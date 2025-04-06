@@ -3,4 +3,4 @@ kind: Service
 metadata:
   name: redis-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP

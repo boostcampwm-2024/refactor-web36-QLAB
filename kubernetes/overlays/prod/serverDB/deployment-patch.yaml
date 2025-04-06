@@ -3,7 +3,24 @@ kind: Deployment
 metadata:
   name: serverdb-deployment
 spec:
+  selector:
+    matchLabels:
+      app: serverdb
   template:
+    metadata:
+      labels:
+        app: serverdb
     spec:
+      containers:
+        - name: serverdb
+          image: mysql:8.4
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qlab-secret
+                  key: DB_PASSWORD
+            - name: MYSQL_DATABASE
+              value: qlabdb
       nodeSelector:
-        node: servicedb
+        ncloud.com/nks-nodepool: server-nodepool

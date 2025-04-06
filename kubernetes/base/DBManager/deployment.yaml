@@ -15,15 +15,6 @@ spec:
       serviceAccountName: dbmanager-account
       containers:
       - name: dbmanager
-        image: hoon317/qlab-dbmanager
+        image: qlab-dbmanager:latest
         ports:
         - containerPort: 3000
-        envFrom:
-        - configMapRef:
-            name: qlab-config
-        env:
-        - name: QUERY_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: qlab-secret
-              key: querydb-password

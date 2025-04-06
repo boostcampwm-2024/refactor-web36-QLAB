@@ -7,4 +7,4 @@ spec:
   template:
     spec:
       nodeSelector:
-        node: servicedb
+        ncloud.com/nks-nodepool: server-nodepool

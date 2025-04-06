@@ -3,12 +3,19 @@ kind: Deployment
 metadata:
   name: dbmanager-deployment
 spec:
-  replicas: 1
   template:
     spec:
-      nodeSelector:
-        node: servicedb
       containers:
-      - name: dbmanager
-        image: hoon317/qlab-dbmanager:latest
-        imagePullPolicy: Always
+        - name: dbmanager
+          image: choco181/qlab-dbmanager:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: qlab-config
+            - secretRef:
+                name: qlab-secret
+      nodeSelector:
+        ncloud.com/nks-nodepool: server-nodepool
+  selector:
+    matchLabels:
+      app: dbmanager
