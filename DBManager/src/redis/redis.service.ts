@@ -48,6 +48,12 @@ export class RedisService {
 
   async removeSession(sessionId: string): Promise<void> {
     await this.redisConnection.del('session:' + sessionId);
+    await this.redisConnection.del('rateLimiter:' + sessionId);
+  }
+
+  async setNX(key: string, value: string, ttl: number): Promise<boolean> {
+    const result = await this.redisConnection.set(key, value, 'EX', ttl, 'NX');
+    return result !== 'OK';
   }
 
   async subscribeSession(
