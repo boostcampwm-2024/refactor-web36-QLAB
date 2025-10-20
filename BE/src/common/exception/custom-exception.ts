@@ -35,3 +35,16 @@ export class RateLimitExceedException extends HttpException {
     );
   }
 }
+
+export class QueryLockedException extends HttpException {
+  constructor() {
+    super(
+      {
+        status: HttpStatus.CONFLICT,
+        message:
+          'Another query is currently running. Please wait until it completes.',
+      },
+      HttpStatus.CONFLICT,
+    );
+  }
+}
