@@ -1,17 +1,18 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
-  name: querydb
+  name: querydb-master
 spec:
-  serviceName: querydb
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: querydb
+      role: master
   template:
     metadata:
       labels:
         app: querydb
+        role: master
     spec:
       containers:
         - name: querydb
@@ -23,11 +24,6 @@ spec:
               mountPath: /var/lib/mysql
           args:
             - "--local-infile=1"
-  volumeClaimTemplates:
-    - metadata:
-        name: querydb-data
-      spec:
-        accessModes: [ "ReadWriteOnce" ]
-        resources:
-          requests:
-            storage: 10Gi
+            - "--server-id=1"
+            - "--log-bin=mysql-bin"
+            - "--binlog-format=ROW"

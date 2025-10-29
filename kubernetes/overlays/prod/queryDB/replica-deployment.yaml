@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: querydb-replica
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: querydb
+      role: replica
+  template:
+    metadata:
+      labels:
+        app: querydb
+        role: replica
+    spec:
+      nodeSelector:
+        ncloud.com/nks-nodepool: nodepool
+
+      initContainers:
+        - name: init-replica
+          image: mysql:8.3
+          command:
+            - sh
+            - -c
+            - |
+              set -ex
+              echo "Master 준비 대기 중..."
+              until mysqladmin ping -h querydb-master --silent; do
+                echo "Waiting for master..."
+                sleep 2
+              done
+
+              echo "Master 데이터 덤프 중..."
+              mysqldump -h querydb-master \
+                        -uroot \
+                        -p"$MYSQL_ROOT_PASSWORD" \
+                        --all-databases \
+                        --single-transaction \
+                        --quick \
+                        --lock-tables=false \
+                        > /docker-entrypoint-initdb.d/dump.sql
+
+              echo "데이터 덤프 완료 ($(du -h /docker-entrypoint-initdb.d/dump.sql | cut -f1))"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qlab-secret
+                  key: root-password
+          volumeMounts:
+            - name: init-data
+              mountPath: /docker-entrypoint-initdb.d
+
+      containers:
+        - name: querydb
+          image: mysql:8.3
+          ports:
+            - containerPort: 3306
+          command:
+            - sh
+            - -c
+            - |
+              POD_IP=$(cat /etc/hosts | grep $(cat /etc/hostname) | awk '{print $1}')
+              SERVER_ID=$(echo $POD_IP | sed 's/\.//g')
+              echo "Starting MySQL with server-id: $SERVER_ID from IP: $POD_IP"
+
+              exec docker-entrypoint.sh mysqld \
+                --server-id=$SERVER_ID \
+                --read-only=1 \
+                --skip-log-bin \
+                --local-infile=1
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: qlab-secret
+                  key: root-password
+          envFrom:
+            - configMapRef:
+                name: qlab-config
+            - secretRef:
+                name: qlab-secret
+          volumeMounts:
+            - name: querydb-data
+              mountPath: /var/lib/mysql
+            - name: init-data
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+
+      volumes:
+        - name: querydb-data
+          emptyDir: {}
+        - name: init-data
+          emptyDir: {}

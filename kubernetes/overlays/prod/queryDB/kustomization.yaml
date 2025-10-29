@@ -1,6 +1,11 @@
 resources:
   - ../../../base/queryDB
-  - ../shared
+  - replica-deployment.yaml
+  - replica-hpa.yaml
+  - pvc.yaml
 
 patches:
-  - path: statefulSet-patch.yaml
+  - path: primary-deployment.yaml
+    target:
+      kind: Deployment
+      name: querydb-master

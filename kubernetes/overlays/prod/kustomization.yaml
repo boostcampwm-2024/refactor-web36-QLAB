@@ -1,8 +1,8 @@
 resources:
+  - ./shared
   - ./apiServer
   - ./queryDB
   - ./redis
   - ./serverDB
   - ./webServer
   - ./DBManager
-  - ../../base

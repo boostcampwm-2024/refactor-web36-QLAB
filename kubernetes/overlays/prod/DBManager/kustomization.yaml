@@ -1,6 +1,5 @@
 resources:
   - ../../../base/DBManager
-  - ../shared
 
 patches:
   - path: deployment-patch.yaml
