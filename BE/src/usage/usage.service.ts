@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { TableService } from '../table/table.service';
 import { DataLimitExceedException } from '../common/exception/custom-exception';
-import { UserDBManager } from '../interceptor/user-database/user-db.manager';
+import { UserDBManager } from '../user-db/user-db.manager';
 import { SessionRepository } from '../middleware/session/session.manager';
 
 @Injectable()

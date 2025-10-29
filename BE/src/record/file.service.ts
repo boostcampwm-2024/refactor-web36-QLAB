@@ -8,7 +8,7 @@ import {
   RANDOM_DATA_TEMP_DIR,
   RECORD_PROCESS_BATCH_SIZE,
 } from './constant/random-record.constant';
-import { UserDBManager } from '../interceptor/user-database/user-db.manager';
+import { UserDBManager } from '../user-db/user-db.manager';
 import { RandomColumnModel } from './random-column.entity';
 import * as path from 'node:path';
 import { ResultSetHeader } from 'mysql2/promise';
@@ -74,6 +74,7 @@ export class FileService implements OnModuleInit {
       queryResult = (await this.userDBManager.run(
         sessionId,
         query,
+        true,
       )) as ResultSetHeader;
       return queryResult.affectedRows;
     } catch (err) {

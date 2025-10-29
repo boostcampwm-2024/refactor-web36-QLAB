@@ -4,10 +4,10 @@ import { QueryController } from './query.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Shell } from '../shell/shell.entity';
 import { UsageModule } from '../usage/usage.module';
-import { UserDBModule } from '../interceptor/user-database/user-db.moudle';
+import { UserDBModule } from '../user-db/user-db.module';
 import { ShellModule } from '../shell/shell.module';
 import { RateLimiterModule } from 'src/interceptor/rate-limiter/rate-limiter.module';
-import { UserDBReplicaConnectionInterceptor } from '../interceptor/user-database/user-db-replica-connection.interceptor';
+import { QueryDBService } from './query-db.service';
 
 @Module({
   imports: [
@@ -18,6 +18,7 @@ import { UserDBReplicaConnectionInterceptor } from '../interceptor/user-database
     RateLimiterModule,
   ],
   controllers: [QueryController],
-  providers: [QueryService, UserDBReplicaConnectionInterceptor],
+  providers: [QueryService, QueryDBService],
+  exports: [QueryDBService],
 })
 export class QueryModule {}

@@ -15,6 +15,8 @@ import {
 import { UsageService } from '../usage/usage.service';
 import { FileService } from './file.service';
 import { TableService } from '../table/table.service';
+import { QueryDBService } from '../query/query-db.service';
+import { QueryType } from '../common/enums/query-type.enum';
 
 @Injectable()
 export class RecordService {
@@ -22,6 +24,7 @@ export class RecordService {
     private readonly usageService: UsageService,
     private readonly tableService: TableService,
     private readonly fileService: FileService,
+    private readonly queryDBService: QueryDBService,
   ) {}
 
   async insertRandomRecord(
@@ -39,21 +42,33 @@ export class RecordService {
       columnEntities,
       createRandomRecordDto.count,
     );
-    const affectedRows = await this.fileService.loadCsvToDB(
-      sessionId,
-      csvFilePath,
-      createRandomRecordDto.tableName,
-      columnNames,
-    );
 
-    await this.fileService.deleteFile(csvFilePath);
+    try {
+      const affectedRows = await this.queryDBService.executeWithTransaction(
+        sessionId,
+        QueryType.INSERT,
+        60 * 1000, // 60초 timeout
+        async () => {
+          return await this.fileService.loadCsvToDB(
+            sessionId,
+            csvFilePath,
+            createRandomRecordDto.tableName,
+            columnNames,
+          );
+        },
+      );
 
-    await this.usageService.updateRowCount(sessionId);
+      await this.fileService.deleteFile(csvFilePath);
+      await this.usageService.updateRowCount(sessionId);
 
-    return new ResRecordDto({
-      status: affectedRows === createRandomRecordDto.count,
-      text: `${createRandomRecordDto.tableName} 에 랜덤 레코드 ${affectedRows}개 삽입되었습니다.`,
-    });
+      return new ResRecordDto({
+        status: affectedRows === createRandomRecordDto.count,
+        text: `${createRandomRecordDto.tableName} 에 랜덤 레코드 ${affectedRows}개 삽입되었습니다.`,
+      });
+    } catch (error) {
+      await this.fileService.deleteFile(csvFilePath);
+      throw error;
+    }
   }
 
   private checkDomainAvailability(mysqlType: string, targetDomain: string) {

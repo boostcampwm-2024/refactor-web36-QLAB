@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserDBManager } from '../interceptor/user-database/user-db.manager';
+import { UserDBManager } from '../user-db/user-db.manager';
 import { RowDataPacket } from 'mysql2/promise';
 import { ColumnDto, ResTableDto } from './dto/res-table.dto';
 import { ResTablesDto } from './dto/res-tables.dto';

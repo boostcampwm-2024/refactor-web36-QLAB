@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
-import { UserDBManager } from '../../interceptor/user-database/user-db.manager';
+import { UserDBManager } from '../../user-db/user-db.manager';
 
 @Injectable()
 export class SessionExpiredListener implements OnModuleInit {

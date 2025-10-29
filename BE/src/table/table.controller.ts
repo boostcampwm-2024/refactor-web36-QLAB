@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Req, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Param, Req } from '@nestjs/common';
 import { ApiExtraModels, ApiTags } from '@nestjs/swagger';
 import { TableService } from './table.service';
 import { Serialize } from '../interceptor/serialize.interceptor';
@@ -9,9 +9,7 @@ import {
   GetTableSwagger,
 } from '../config/swagger/table-swagger.decorator';
 import { ResponseDto } from '../common/response/response.dto';
-import { UserDBConnectionInterceptor } from '../interceptor/user-database/user-db-connection.interceptor';
 
-@UseInterceptors(UserDBConnectionInterceptor)
 @ApiExtraModels(ResponseDto, ResTablesDto, ResTableDto)
 @ApiTags('테이블 가져오기 API')
 @Controller('api')

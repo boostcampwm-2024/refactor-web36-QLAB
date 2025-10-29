@@ -4,9 +4,10 @@ import { QueryType } from '../common/enums/query-type.enum';
 import { ShellService } from '../shell/shell.service';
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { Shell } from '../shell/shell.entity';
-import { UserDBManager } from '../interceptor/user-database/user-db.manager';
+import { UserDBManager } from '../user-db/user-db.manager';
 import { UsageService } from 'src/usage/usage.service';
 import { BadColumnQueryException } from '../common/exception/custom-exception';
+import { QueryDBService } from './query-db.service';
 
 @Injectable()
 export class QueryService {
@@ -14,35 +15,51 @@ export class QueryService {
     private readonly userDBManager: UserDBManager,
     private shellService: ShellService,
     private readonly usageService: UsageService,
+    private readonly queryDBService: QueryDBService,
   ) {}
 
-  async execute(sessionId: string, shellId: number, queryDto: QueryDto) {
+  async execute(req: any, shellId: number, queryDto: QueryDto) {
     await this.shellService.findShellOrThrow(shellId);
     this.checkColumnTypes(queryDto.query);
+
+    const sessionId = req.sessionID;
+    const remainTime = req.remainTime;
 
     const baseUpdateData = {
       sessionId: sessionId,
       query: queryDto.query,
       queryType: this.detectQueryType(queryDto.query),
     };
-    let updateData;
+
+    if (baseUpdateData.queryType === QueryType.UNKNOWN) {
+      return await this.shellService.replace(shellId, {
+        ...baseUpdateData,
+        queryStatus: false,
+        text: '지원하지 않는 쿼리입니다.',
+      });
+    }
+
     try {
-      if (baseUpdateData.queryType === QueryType.UNKNOWN) {
-        return await this.shellService.replace(shellId, {
-          ...baseUpdateData,
-          queryStatus: false,
-          text: '지원하지 않는 쿼리입니다.',
-        });
-      }
-      updateData = await this.processQuery(
+      const updateData = await this.queryDBService.executeWithTransaction(
         sessionId,
-        baseUpdateData,
-        queryDto.query,
+        baseUpdateData.queryType,
+        remainTime * 1000,
+        async (useMaster) => {
+          return await this.processQuery(
+            sessionId,
+            baseUpdateData,
+            queryDto.query,
+            useMaster,
+          );
+        },
       );
+
+      await this.usageService.updateRowCount(sessionId);
+      return await this.shellService.replace(shellId, updateData);
     } catch (e) {
       const text = `ERROR ${e.errno || ''} (${e.sqlState || ''}): ${e.sqlMessage || ''}`;
 
-      updateData = {
+      const updateData = {
         ...baseUpdateData,
         queryStatus: false,
         failMessage: e.sqlMessage,
@@ -50,19 +67,19 @@ export class QueryService {
       };
       return await this.shellService.replace(shellId, updateData);
     }
-    await this.usageService.updateRowCount(sessionId);
-    return await this.shellService.replace(shellId, updateData);
   }
 
   private async processQuery(
     sessionId: string,
     baseUpdateData: any,
     query: string,
+    isWriteQuery: boolean,
   ): Promise<Partial<Shell>> {
     const isResultTable = this.existResultTable(baseUpdateData.queryType);
+    const useMaster = isWriteQuery;
 
-    const rows = await this.userDBManager.run(sessionId, query);
-    const runTime = await this.measureQueryRunTime(sessionId);
+    const rows = await this.userDBManager.run(sessionId, query, useMaster);
+    const runTime = await this.measureQueryRunTime(sessionId, useMaster);
 
     let text: string;
     let resultTable: RowDataPacket[];
@@ -91,12 +108,16 @@ export class QueryService {
     };
   }
 
-  async measureQueryRunTime(sessionId: string): Promise<string> {
+  async measureQueryRunTime(
+    sessionId: string,
+    useMaster: boolean = false,
+  ): Promise<string> {
     try {
       const query = `SHOW PROFILES`;
       const rows = (await this.userDBManager.run(
         sessionId,
         query,
+        useMaster,
       )) as RowDataPacket[];
       let lastQueryRunTime = rows[rows.length - 1]?.Duration;
       lastQueryRunTime = Math.round(lastQueryRunTime * 1000) / 1000 || 0;

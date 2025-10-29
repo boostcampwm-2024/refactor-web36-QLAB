@@ -1,7 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { RedisProviderModule } from '../../config/redis-provider/redis-provider.module';
 import { SessionRepository } from './session.manager';
-import { UserDBModule } from '../../interceptor/user-database/user-db.moudle';
+import { UserDBModule } from '../../user-db/user-db.module';
 import { SessionExpiredListener } from './session-expired.listener';
 
 @Module({

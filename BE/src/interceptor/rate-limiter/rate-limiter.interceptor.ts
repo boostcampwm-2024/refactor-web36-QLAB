@@ -6,14 +6,12 @@ import {
 } from '@nestjs/common';
 import { RateLimiterManager } from './rate-limiter.manager';
 import { finalize, Observable } from 'rxjs';
-import { UserDBManager } from '../user-database/user-db.manager';
 import { QueryLockManager } from '../../config/redis-provider/query-lock.manager';
 
 @Injectable()
 export class RateLimiterInterceptor implements NestInterceptor {
   constructor(
     private readonly rateLimiterManager: RateLimiterManager,
-    private readonly userDBManager: UserDBManager,
     private readonly queryLockManager: QueryLockManager,
   ) {}
 
@@ -31,10 +29,8 @@ export class RateLimiterInterceptor implements NestInterceptor {
     let remainTime = await this.rateLimiterManager.getRemainTime(sessionId);
     remainTime = parseFloat(remainTime.toFixed(3));
 
-    await this.userDBManager.run(
-      sessionId,
-      `SET SESSION MAX_EXECUTION_TIME=${remainTime * 1000}`,
-    );
+    request.remainTime = remainTime;
+
     return next.handle().pipe(
       finalize(async () => {
         const responseTime = parseFloat(
