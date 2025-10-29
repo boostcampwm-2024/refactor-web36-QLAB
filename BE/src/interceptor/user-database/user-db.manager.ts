@@ -25,12 +25,18 @@ export class UserDBManager {
     return result;
   }
 
-  async createConnection(sessionId: string): Promise<void> {
+  async createConnection(sessionId: string, useReplica: boolean = false): Promise<void> {
     if (!this.connectionMap.has(sessionId)) {
-      const podDNS = await this.sessionRepository.getConnectedPod(sessionId);
       const identify = sessionId.substring(0, 10);
+      const host = useReplica
+        ? this.configService.get<string>(
+            'QUERY_DB_REPLICA_HOST',
+            this.configService.get<string>('QUERY_DB_HOST', '127.0.0.1'),
+          )
+        : this.configService.get<string>('QUERY_DB_HOST', '127.0.0.1');
+
       const connection = await createConnection({
-        host: podDNS,
+        host,
         user: identify,
         password: identify,
         port: this.configService.get<number>('QUERY_DB_PORT', 3306),

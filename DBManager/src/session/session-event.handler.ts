@@ -1,14 +1,11 @@
 import { RedisService } from '../redis/redis.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { UserDBService } from '../user-db/user-db.service';
-import { LoadBalancer } from 'src/loadBalancer/load-balancer';
-
 @Injectable()
 export class SessionEventHandler implements OnModuleInit {
   constructor(
     private readonly redisService: RedisService,
     private readonly userDBService: UserDBService,
-    private readonly loadBalancer: LoadBalancer,
   ) {}
 
   onModuleInit() {
@@ -27,10 +24,7 @@ export class SessionEventHandler implements OnModuleInit {
       );
       if (isProcessed) return;
 
-      await this.loadBalancer.allocate(sessionId);
-      const podDNS = await this.redisService.getPodDNSBySessionId(sessionId);
-      await this.userDBService.initUserDatabase(podDNS, sessionId);
-      await this.redisService.incrActiveUser(podDNS);
+      await this.userDBService.initUserDatabase(sessionId);
     });
   }
 
@@ -47,11 +41,7 @@ export class SessionEventHandler implements OnModuleInit {
         );
         if (isProcessed) return;
 
-        const podDNS = await this.redisService.getPodDNSBySessionId(sessionId);
-        if (!podDNS) return;
-
-        await this.userDBService.removeDatabase(podDNS, sessionId);
-        await this.redisService.decrActiveUser(podDNS);
+        await this.userDBService.removeDatabase(sessionId);
         await this.redisService.removeSession(sessionId);
       }
     });

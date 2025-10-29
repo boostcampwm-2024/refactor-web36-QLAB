@@ -7,6 +7,7 @@ import { UsageModule } from '../usage/usage.module';
 import { UserDBModule } from '../interceptor/user-database/user-db.moudle';
 import { ShellModule } from '../shell/shell.module';
 import { RateLimiterModule } from 'src/interceptor/rate-limiter/rate-limiter.module';
+import { UserDBReplicaConnectionInterceptor } from '../interceptor/user-database/user-db-replica-connection.interceptor';
 
 @Module({
   imports: [
@@ -17,6 +18,6 @@ import { RateLimiterModule } from 'src/interceptor/rate-limiter/rate-limiter.mod
     RateLimiterModule,
   ],
   controllers: [QueryController],
-  providers: [QueryService],
+  providers: [QueryService, UserDBReplicaConnectionInterceptor],
 })
 export class QueryModule {}

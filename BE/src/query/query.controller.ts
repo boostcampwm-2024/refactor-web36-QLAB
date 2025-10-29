@@ -15,7 +15,7 @@ import { ResQueryDto } from './dto/res-query.dto';
 import { ExecuteQuerySwagger } from '../config/swagger/query-swagger.decorator';
 import { Serialize } from '../interceptor/serialize.interceptor';
 import { ShellGuard } from '../guard/shell.guard';
-import { UserDBConnectionInterceptor } from '../interceptor/user-database/user-db-connection.interceptor';
+import { UserDBReplicaConnectionInterceptor } from '../interceptor/user-database/user-db-replica-connection.interceptor';
 import { RateLimiterGuard } from '../guard/rate-limiter.guard';
 import { RateLimiterInterceptor } from '../interceptor/rate-limiter/rate-limiter.interceptor';
 
@@ -26,7 +26,7 @@ export class QueryController {
   constructor(private readonly queryService: QueryService) {}
 
   @UseInterceptors(RateLimiterInterceptor)
-  @UseInterceptors(UserDBConnectionInterceptor)
+  @UseInterceptors(UserDBReplicaConnectionInterceptor)
   @ExecuteQuerySwagger()
   @Serialize(ResQueryDto)
   @Post('/:shellId/execute')

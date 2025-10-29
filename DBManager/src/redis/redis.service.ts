@@ -18,34 +18,6 @@ export class RedisService {
     });
   }
 
-  async getPodDNSBySessionId(sessionId: string): Promise<string | null> {
-    return this.redisConnection.hget('session:' + sessionId, 'podDNS');
-  }
-
-  async setPodDNS(sessionId: string, podDNS: string): Promise<void> {
-    await this.redisConnection.hset('session:' + sessionId, 'podDNS', podDNS);
-  }
-
-  async incrActiveUser(podDNS: string): Promise<void> {
-    await this.redisConnection.zincrby('activeUser', 1, podDNS);
-  }
-
-  async decrActiveUser(podDNS: string): Promise<void> {
-    await this.redisConnection.zincrby('activeUser', -1, podDNS);
-  }
-
-  async initActiveUser(podDNS: string): Promise<void> {
-    await this.redisConnection.zadd('activeUser', 0, podDNS);
-  }
-
-  async delPod(podDNS: string): Promise<void> {
-    await this.redisConnection.zrem('activeUser', podDNS);
-  }
-
-  async getMinActivUserPod() {
-    return (await this.redisConnection.zrange('activeUser', 0, 0))[0];
-  }
-
   async removeSession(sessionId: string): Promise<void> {
     await this.redisConnection.del('session:' + sessionId);
     await this.redisConnection.del('rateLimiter:' + sessionId);
