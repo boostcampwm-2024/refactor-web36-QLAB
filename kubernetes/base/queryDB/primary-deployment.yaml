@@ -27,3 +27,5 @@ spec:
             - "--server-id=1"
             - "--log-bin=mysql-bin"
             - "--binlog-format=ROW"
+            - "--gtid-mode=ON"
+            - "--enforce-gtid-consistency=ON"

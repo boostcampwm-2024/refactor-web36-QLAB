@@ -42,6 +42,19 @@ spec:
                         > /docker-entrypoint-initdb.d/dump.sql
 
               echo "데이터 덤프 완료 ($(du -h /docker-entrypoint-initdb.d/dump.sql | cut -f1))"
+
+              # GTID 기반 Replication 설정 스크립트 생성
+              cat > /docker-entrypoint-initdb.d/setup-replication.sql <<EOF
+              CHANGE REPLICATION SOURCE TO
+                SOURCE_HOST='querydb-master',
+                SOURCE_USER='root',
+                SOURCE_PASSWORD='$MYSQL_ROOT_PASSWORD',
+                SOURCE_AUTO_POSITION=1,
+                GET_SOURCE_PUBLIC_KEY=1;
+              START REPLICA;
+              EOF
+
+              echo "Replication 설정 스크립트 생성 완료"
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -69,7 +82,9 @@ spec:
                 --server-id=$SERVER_ID \
                 --read-only=1 \
                 --skip-log-bin \
-                --local-infile=1
+                --local-infile=1 \
+                --gtid-mode=ON \
+                --enforce-gtid-consistency=ON
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
