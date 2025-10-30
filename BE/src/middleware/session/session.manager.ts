@@ -32,7 +32,4 @@ export class SessionRepository {
     await this.redis.hset('session:' + sessionId, 'rowCount', rowCount);
   }
 
-  public async getConnectedPod(sessionId: string): Promise<string> {
-    return this.redis.hget('session:' + sessionId, 'podDNS');
-  }
 }

@@ -42,6 +42,8 @@ export class QueryDBService {
       // 실패 시 rollback
       await this.userDBManager.rollback(sessionId);
       throw error;
+    } finally {
+      await this.userDBManager.removeConnection(sessionId);
     }
   }
 }
