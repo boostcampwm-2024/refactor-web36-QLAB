@@ -19,13 +19,40 @@ spec:
           image: mysql:8.3
           ports:
             - containerPort: 3306
+          command:
+            - sh
+            - -c
+            - |
+              # MySQL 시작
+              docker-entrypoint.sh mysqld \
+                --local-infile=1 \
+                --server-id=1 \
+                --log-bin=mysql-bin \
+                --binlog-format=ROW \
+                --gtid-mode=ON \
+                --enforce-gtid-consistency=ON &
+
+              MYSQL_PID=$!
+
+              # MySQL 준비 대기
+              echo "Waiting for MySQL to be ready..."
+              until mysqladmin ping -h localhost --silent; do
+                sleep 1
+              done
+              echo "MySQL is ready"
+
+              # Clone Plugin 설치 및 사용자 생성 (이미 존재하면 무시)
+              mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF || true
+              INSTALL PLUGIN clone SONAME 'mysql_clone.so';
+              CREATE USER IF NOT EXISTS 'clone_user'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+              GRANT BACKUP_ADMIN ON *.* TO 'clone_user'@'%';
+              FLUSH PRIVILEGES;
+              EOF
+
+              echo "Clone plugin configured"
+
+              # MySQL 프로세스 대기
+              wait $MYSQL_PID
           volumeMounts:
             - name: querydb-data
               mountPath: /var/lib/mysql
-          args:
-            - "--local-infile=1"
-            - "--server-id=1"
-            - "--log-bin=mysql-bin"
-            - "--binlog-format=ROW"
-            - "--gtid-mode=ON"
-            - "--enforce-gtid-consistency=ON"

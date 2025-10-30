@@ -3,7 +3,6 @@ kind: Deployment
 metadata:
   name: querydb-replica
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app: querydb
@@ -17,8 +16,19 @@ spec:
       nodeSelector:
         ncloud.com/nks-nodepool: nodepool
 
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - querydb
+              topologyKey: kubernetes.io/hostname
+
       initContainers:
-        - name: init-replica
+        - name: wait-for-master
           image: mysql:8.3
           command:
             - sh
@@ -30,40 +40,13 @@ spec:
                 echo "Waiting for master..."
                 sleep 2
               done
-
-              echo "Master 데이터 덤프 중..."
-              mysqldump -h querydb-master \
-                        -uroot \
-                        -p"$MYSQL_ROOT_PASSWORD" \
-                        --all-databases \
-                        --single-transaction \
-                        --quick \
-                        --lock-tables=false \
-                        > /docker-entrypoint-initdb.d/dump.sql
-
-              echo "데이터 덤프 완료 ($(du -h /docker-entrypoint-initdb.d/dump.sql | cut -f1))"
-
-              # GTID 기반 Replication 설정 스크립트 생성
-              cat > /docker-entrypoint-initdb.d/setup-replication.sql <<EOF
-              CHANGE REPLICATION SOURCE TO
-                SOURCE_HOST='querydb-master',
-                SOURCE_USER='root',
-                SOURCE_PASSWORD='$MYSQL_ROOT_PASSWORD',
-                SOURCE_AUTO_POSITION=1,
-                GET_SOURCE_PUBLIC_KEY=1;
-              START REPLICA;
-              EOF
-
-              echo "Replication 설정 스크립트 생성 완료"
+              echo "Master 준비 완료"
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: qlab-secret
                   key: root-password
-          volumeMounts:
-            - name: init-data
-              mountPath: /docker-entrypoint-initdb.d
 
       containers:
         - name: querydb
@@ -78,13 +61,80 @@ spec:
               SERVER_ID=$(echo $POD_IP | sed 's/\.//g')
               echo "Starting MySQL with server-id: $SERVER_ID from IP: $POD_IP"
 
-              exec docker-entrypoint.sh mysqld \
+              # 초기 데이터 존재 여부 확인
+              DATA_EXISTS=false
+              if [ -f /var/lib/mysql/auto.cnf ]; then
+                echo "Existing data found, skipping clone"
+                DATA_EXISTS=true
+              fi
+
+              # MySQL 백그라운드 시작
+              docker-entrypoint.sh mysqld \
                 --server-id=$SERVER_ID \
                 --read-only=1 \
                 --skip-log-bin \
                 --local-infile=1 \
                 --gtid-mode=ON \
-                --enforce-gtid-consistency=ON
+                --enforce-gtid-consistency=ON &
+
+              MYSQL_PID=$!
+
+              # MySQL 준비 대기
+              echo "Waiting for MySQL to be ready..."
+              until mysqladmin ping -h localhost --silent; do
+                sleep 1
+              done
+              echo "MySQL is ready"
+
+              # 초기 데이터가 없으면 Clone 실행
+              if [ "$DATA_EXISTS" = false ]; then
+                echo "Cloning data from master..."
+                mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF
+              INSTALL PLUGIN clone SONAME 'mysql_clone.so';
+              SET GLOBAL clone_valid_donor_list = 'querydb-master:3306';
+              CLONE INSTANCE FROM 'clone_user'@'querydb-master':3306
+                IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+              EOF
+
+                echo "Clone completed, restarting MySQL..."
+                kill $MYSQL_PID
+                wait $MYSQL_PID
+
+                # MySQL 재시작
+                docker-entrypoint.sh mysqld \
+                  --server-id=$SERVER_ID \
+                  --read-only=1 \
+                  --skip-log-bin \
+                  --local-infile=1 \
+                  --gtid-mode=ON \
+                  --enforce-gtid-consistency=ON &
+
+                MYSQL_PID=$!
+
+                # MySQL 준비 대기
+                echo "Waiting for MySQL to be ready after clone..."
+                until mysqladmin ping -h localhost --silent; do
+                  sleep 1
+                done
+                echo "MySQL is ready after clone"
+              fi
+
+              # Replication 설정 (clone 후에는 자동으로 설정되지만 명시적으로 재확인)
+              echo "Setting up replication..."
+              mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF
+              CHANGE REPLICATION SOURCE TO
+                SOURCE_HOST='querydb-master',
+                SOURCE_USER='root',
+                SOURCE_PASSWORD='$MYSQL_ROOT_PASSWORD',
+                SOURCE_AUTO_POSITION=1,
+                GET_SOURCE_PUBLIC_KEY=1;
+              START REPLICA;
+              EOF
+
+              echo "Replication started"
+
+              # MySQL 프로세스 대기
+              wait $MYSQL_PID
           env:
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
@@ -99,16 +149,15 @@ spec:
           volumeMounts:
             - name: querydb-data
               mountPath: /var/lib/mysql
-            - name: init-data
-              mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
             exec:
               command:
-                - mysqladmin
-                - ping
-                - -h
-                - localhost
-            initialDelaySeconds: 30
+                - sh
+                - -c
+                - |
+                  mysqladmin ping -h localhost --silent && \
+                  mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" -e "SHOW REPLICA STATUS\G" | grep "Replica_SQL_Running: Yes"
+            initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
@@ -131,6 +180,4 @@ spec:
 
       volumes:
         - name: querydb-data
-          emptyDir: {}
-        - name: init-data
           emptyDir: {}
