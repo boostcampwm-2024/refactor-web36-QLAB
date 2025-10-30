@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pvc-autoscaler
+  namespace: default
+spec:
+  # 5분마다 실행
+  schedule: "*/5 * * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid  # 동시 실행 방지
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300  # 5분 후 Job 자동 삭제
+      template:
+        spec:
+          serviceAccountName: pvc-autoscaler
+          restartPolicy: OnFailure
+          containers:
+            - name: autoscaler
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  # ConfigMap에서 스크립트 복사 및 실행
+                  cp /scripts/autoscaler.sh /tmp/autoscaler.sh
+                  chmod +x /tmp/autoscaler.sh
+                  /tmp/autoscaler.sh
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+          volumes:
+            - name: scripts
+              configMap:
+                name: pvc-autoscaler-script

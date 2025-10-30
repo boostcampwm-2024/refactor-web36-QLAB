@@ -1,0 +1,459 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pvc-autoscaler-script
+  namespace: default
+data:
+  autoscaler.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    # 설정
+    EXPAND_THRESHOLD=80        # 확장 임계치 (%)
+    SHRINK_THRESHOLD=10        # 축소 임계치 (%)
+    EXPAND_PERCENT=20          # 확장 비율 (%)
+    SHRINK_PERCENT=50          # 축소 비율 (%)
+    MIN_SIZE_GI=10             # 최소 볼륨 크기 (Gi)
+    MAX_SIZE_GI=500            # 최대 볼륨 크기 (Gi)
+    UNUSED_PVC_RETENTION_HOURS=6  # 미사용 PVC 보관 시간 (시간)
+    STATE_CONFIGMAP="pvc-autoscaler-state"
+
+    echo "========================================"
+    echo "PVC AutoScaler Started at $(date)"
+    echo "========================================"
+
+    # ConfigMap에서 상태 읽기
+    get_shrink_count() {
+      local pvc_name=$1
+      kubectl get configmap "$STATE_CONFIGMAP" -o jsonpath="{.data.$pvc_name}" 2>/dev/null || echo "0"
+    }
+
+    # ConfigMap에 상태 저장
+    set_shrink_count() {
+      local pvc_name=$1
+      local count=$2
+
+      # ConfigMap이 없으면 생성
+      if ! kubectl get configmap "$STATE_CONFIGMAP" &>/dev/null; then
+        kubectl create configmap "$STATE_CONFIGMAP" --from-literal="$pvc_name=$count"
+      else
+        # 기존 ConfigMap 업데이트
+        kubectl patch configmap "$STATE_CONFIGMAP" --type merge -p "{\"data\":{\"$pvc_name\":\"$count\"}}"
+      fi
+    }
+
+    # 디스크 사용량 확인 함수
+    check_disk_usage() {
+      local pod_name=$1
+      local mount_path=$2
+
+      # Pod에서 디스크 사용량 확인 (df 사용)
+      local usage=$(kubectl exec "$pod_name" -- df "$mount_path" | tail -1 | awk '{print $5}' | sed 's/%//')
+      echo "$usage"
+    }
+
+    # PVC 현재 크기 가져오기 (Gi 단위)
+    get_pvc_size() {
+      local pvc_name=$1
+      local size=$(kubectl get pvc "$pvc_name" -o jsonpath='{.spec.resources.requests.storage}')
+
+      # Gi 단위로 변환
+      if [[ $size =~ ^([0-9]+)Gi$ ]]; then
+        echo "${BASH_REMATCH[1]}"
+      elif [[ $size =~ ^([0-9]+)G$ ]]; then
+        echo "${BASH_REMATCH[1]}"
+      else
+        echo "0"
+      fi
+    }
+
+    # PVC 확장 (무중단)
+    expand_pvc() {
+      local pvc_name=$1
+      local current_size=$2
+      local new_size=$3
+
+      echo "[EXPAND] $pvc_name: ${current_size}Gi -> ${new_size}Gi"
+
+      kubectl patch pvc "$pvc_name" -p "{\"spec\":{\"resources\":{\"requests\":{\"storage\":\"${new_size}Gi\"}}}}"
+
+      echo "[EXPAND] Successfully expanded $pvc_name"
+
+      # 이벤트 생성
+      kubectl create event pvc-expanded \
+        --type=Normal \
+        --reason=PVCExpanded \
+        --message="PVC $pvc_name expanded from ${current_size}Gi to ${new_size}Gi" \
+        --action=Expand \
+        --regarding=persistentvolumeclaim/"$pvc_name" || true
+    }
+
+    # PVC 축소 (다운타임 있음)
+    shrink_pvc() {
+      local pvc_name=$1
+      local deployment_name=$2
+      local current_size=$3
+      local new_size=$4
+
+      echo "[SHRINK] $pvc_name: ${current_size}Gi -> ${new_size}Gi (다운타임 발생)"
+
+      # 1. 새 PVC 생성
+      local new_pvc_name="${pvc_name}-new"
+      cat <<EOF | kubectl apply -f -
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: $new_pvc_name
+      namespace: default
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: ${new_size}Gi
+    EOF
+
+      echo "[SHRINK] Created new PVC: $new_pvc_name"
+
+      # 2. PVC가 Bound 될 때까지 대기
+      echo "[SHRINK] Waiting for new PVC to be bound..."
+      kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc/"$new_pvc_name" --timeout=300s
+
+      # 3. 데이터 마이그레이션 Job 생성
+      cat <<EOF | kubectl apply -f -
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: pvc-migrate-${pvc_name}-$(date +%s)
+      namespace: default
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: migrate
+              image: busybox
+              command:
+                - sh
+                - -c
+                - |
+                  echo "Starting data migration..."
+                  cp -av /old-data/. /new-data/
+                  echo "Migration completed"
+              volumeMounts:
+                - name: old-data
+                  mountPath: /old-data
+                - name: new-data
+                  mountPath: /new-data
+          volumes:
+            - name: old-data
+              persistentVolumeClaim:
+                claimName: $pvc_name
+            - name: new-data
+              persistentVolumeClaim:
+                claimName: $new_pvc_name
+    EOF
+
+      # 4. Migration Job 완료 대기
+      echo "[SHRINK] Waiting for migration to complete..."
+      local job_name="pvc-migrate-${pvc_name}-$(date +%s)"
+      kubectl wait --for=condition=complete job/"$job_name" --timeout=3600s
+
+      # 5. Deployment의 PVC를 새 것으로 교체
+      echo "[SHRINK] Updating deployment to use new PVC..."
+      kubectl patch deployment "$deployment_name" --type json \
+        -p "[{\"op\": \"replace\", \"path\": \"/spec/template/spec/volumes/0/persistentVolumeClaim/claimName\", \"value\": \"$new_pvc_name\"}]"
+
+      # 6. 기존 PVC 삭제
+      echo "[SHRINK] Deleting old PVC..."
+      kubectl delete pvc "$pvc_name"
+
+      # 7. 새 PVC 이름을 원래 이름으로 변경 (rename은 안 되므로 새로 생성)
+      kubectl get pvc "$new_pvc_name" -o yaml | \
+        sed "s/name: $new_pvc_name/name: $pvc_name/" | \
+        kubectl apply -f -
+      kubectl delete pvc "$new_pvc_name"
+
+      # 8. Deployment 다시 원래 PVC로 업데이트
+      kubectl patch deployment "$deployment_name" --type json \
+        -p "[{\"op\": \"replace\", \"path\": \"/spec/template/spec/volumes/0/persistentVolumeClaim/claimName\", \"value\": \"$pvc_name\"}]"
+
+      echo "[SHRINK] Successfully shrunk $pvc_name"
+
+      # 이벤트 생성
+      kubectl create event pvc-shrunk \
+        --type=Normal \
+        --reason=PVCShrunk \
+        --message="PVC $pvc_name shrunk from ${current_size}Gi to ${new_size}Gi" \
+        --action=Shrink \
+        --regarding=persistentvolumeclaim/"$pvc_name" || true
+    }
+
+    # PVC 처리 함수
+    process_pvc() {
+      local pvc_name=$1
+      local pod_selector=$2
+      local mount_path=$3
+      local deployment_name=$4
+
+      echo ""
+      echo "Processing PVC: $pvc_name"
+
+      # Pod 찾기
+      local pod_name=$(kubectl get pods -l "$pod_selector" -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+      if [ -z "$pod_name" ]; then
+        echo "[WARNING] No pod found for selector: $pod_selector"
+        return
+      fi
+
+      echo "Found pod: $pod_name"
+
+      # 디스크 사용량 확인
+      local usage=$(check_disk_usage "$pod_name" "$mount_path")
+      echo "Disk usage: ${usage}%"
+
+      # 현재 PVC 크기
+      local current_size=$(get_pvc_size "$pvc_name")
+      echo "Current PVC size: ${current_size}Gi"
+
+      # 확장 체크 (80% 이상)
+      if [ "$usage" -ge "$EXPAND_THRESHOLD" ]; then
+        echo "[ACTION] Usage >= ${EXPAND_THRESHOLD}%, expanding..."
+
+        local new_size=$(( current_size + current_size * EXPAND_PERCENT / 100 ))
+
+        # 최대 크기 체크
+        if [ "$new_size" -gt "$MAX_SIZE_GI" ]; then
+          echo "[WARNING] New size ${new_size}Gi exceeds max ${MAX_SIZE_GI}Gi, capping at max"
+          new_size=$MAX_SIZE_GI
+        fi
+
+        if [ "$current_size" -lt "$MAX_SIZE_GI" ]; then
+          expand_pvc "$pvc_name" "$current_size" "$new_size"
+          # 확장 후 shrink 카운트 초기화
+          set_shrink_count "$pvc_name" "0"
+        else
+          echo "[WARNING] Already at max size, cannot expand"
+        fi
+
+      # 축소 체크 (10% 이하)
+      elif [ "$usage" -le "$SHRINK_THRESHOLD" ]; then
+        echo "[ACTION] Usage <= ${SHRINK_THRESHOLD}%, checking shrink eligibility..."
+
+        # 연속 2회 확인
+        local shrink_count=$(get_shrink_count "$pvc_name")
+        shrink_count=$((shrink_count + 1))
+        echo "Low usage count: $shrink_count/2"
+
+        if [ "$shrink_count" -ge 2 ]; then
+          local new_size=$(( current_size * SHRINK_PERCENT / 100 ))
+
+          # 최소 크기 체크
+          if [ "$new_size" -lt "$MIN_SIZE_GI" ]; then
+            echo "[WARNING] New size ${new_size}Gi below min ${MIN_SIZE_GI}Gi, setting to min"
+            new_size=$MIN_SIZE_GI
+          fi
+
+          if [ "$current_size" -gt "$MIN_SIZE_GI" ] && [ "$new_size" -lt "$current_size" ]; then
+            shrink_pvc "$pvc_name" "$deployment_name" "$current_size" "$new_size"
+            # 축소 후 카운트 초기화
+            set_shrink_count "$pvc_name" "0"
+          else
+            echo "[INFO] Already at min size or cannot shrink"
+            set_shrink_count "$pvc_name" "0"
+          fi
+        else
+          # 카운트 증가
+          set_shrink_count "$pvc_name" "$shrink_count"
+        fi
+
+      else
+        echo "[INFO] Usage is normal (${usage}%), no action needed"
+        # 정상 범위면 카운트 초기화
+        set_shrink_count "$pvc_name" "0"
+      fi
+    }
+
+    # Replica PVC들을 Master와 동일한 크기로 동기화
+    sync_replica_pvcs() {
+      local master_size=$1
+
+      echo ""
+      echo "Syncing Replica PVCs to ${master_size}Gi..."
+
+      for pvc in $(kubectl get pvc -l app=querydb,role=replica -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+        current_replica_size=$(get_pvc_size "$pvc")
+
+        if [ "$current_replica_size" -ne "$master_size" ]; then
+          echo "[SYNC] $pvc: ${current_replica_size}Gi -> ${master_size}Gi"
+
+          if [ "$master_size" -gt "$current_replica_size" ]; then
+            # 확장 (무중단)
+            expand_pvc "$pvc" "$current_replica_size" "$master_size"
+          else
+            # 축소 (다운타임)
+            replica_pod_name=$(echo "$pvc" | sed 's/querydb-data-//')
+            shrink_pvc "$pvc" "querydb-replica" "$current_replica_size" "$master_size"
+          fi
+        else
+          echo "[SYNC] $pvc: Already at ${master_size}Gi, no sync needed"
+        fi
+      done
+    }
+
+    # 미사용 Replica PVC 자동 삭제
+    cleanup_unused_replica_pvcs() {
+      echo ""
+      echo "Checking for unused Replica PVCs..."
+
+      # StatefulSet replicas 수 확인
+      replicas=$(kubectl get statefulset querydb-replica -o jsonpath='{.spec.replicas}' 2>/dev/null)
+
+      if [ -z "$replicas" ]; then
+        echo "[WARNING] StatefulSet querydb-replica not found"
+        return
+      fi
+
+      echo "StatefulSet replicas: $replicas"
+
+      # 모든 replica PVC 확인
+      for pvc in $(kubectl get pvc -l app=querydb,role=replica -o jsonpath='{.items[*].metadata.name}' 2>/dev/null); do
+        # PVC 인덱스 추출 (querydb-data-querydb-replica-1 -> 1)
+        pvc_index=$(echo "$pvc" | grep -o '[0-9]*$')
+
+        if [ -z "$pvc_index" ]; then
+          echo "[WARNING] Could not extract index from PVC: $pvc"
+          continue
+        fi
+
+        # 인덱스 >= replicas면 미사용
+        if [ "$pvc_index" -ge "$replicas" ]; then
+          echo "[UNUSED] Found unused PVC: $pvc (index: $pvc_index >= replicas: $replicas)"
+
+          # PVC 생성 시간 확인
+          creation_time=$(kubectl get pvc "$pvc" -o jsonpath='{.metadata.creationTimestamp}')
+          creation_epoch=$(date -u -d "$creation_time" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$creation_time" +%s 2>/dev/null)
+          current_epoch=$(date +%s)
+          age_seconds=$((current_epoch - creation_epoch))
+          age_hours=$((age_seconds / 3600))
+
+          echo "[UNUSED] PVC age: ${age_hours} hours (retention: ${UNUSED_PVC_RETENTION_HOURS} hours)"
+
+          if [ "$age_hours" -ge "$UNUSED_PVC_RETENTION_HOURS" ]; then
+            echo "[DELETE] Deleting unused PVC: $pvc (age: ${age_hours} hours)"
+            kubectl delete pvc "$pvc"
+
+            # 이벤트 생성
+            kubectl create event pvc-unused-deleted \
+              --type=Normal \
+              --reason=UnusedPVCDeleted \
+              --message="Unused PVC $pvc deleted after ${age_hours} hours" \
+              --action=Delete \
+              --regarding=persistentvolumeclaim/"$pvc" || true
+          else
+            echo "[RETAIN] Keeping PVC: $pvc (age: ${age_hours} hours < retention: ${UNUSED_PVC_RETENTION_HOURS} hours)"
+          fi
+        else
+          echo "[ACTIVE] PVC in use: $pvc (index: $pvc_index < replicas: $replicas)"
+        fi
+      done
+    }
+
+    # 메인 로직: Master 기준으로 모니터링 후 Replica 동기화
+
+    echo "========================================="
+    echo "Checking Master PVC (querydb-master-pvc)"
+    echo "========================================="
+
+    # Master PVC 처리
+    master_pod=$(kubectl get pods -l app=querydb,role=master -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+
+    if [ -z "$master_pod" ]; then
+      echo "[ERROR] Master pod not found"
+      exit 1
+    fi
+
+    echo "Found master pod: $master_pod"
+
+    # Master 디스크 사용량 확인
+    usage=$(check_disk_usage "$master_pod" "/var/lib/mysql")
+    echo "Master disk usage: ${usage}%"
+
+    # Master PVC 크기 확인
+    current_size=$(get_pvc_size "querydb-master-pvc")
+    echo "Master PVC size: ${current_size}Gi"
+
+    action_taken=false
+    new_master_size=$current_size
+
+    # 확장 체크 (80% 이상)
+    if [ "$usage" -ge "$EXPAND_THRESHOLD" ]; then
+      echo "[ACTION] Master usage >= ${EXPAND_THRESHOLD}%, expanding..."
+
+      new_master_size=$(( current_size + current_size * EXPAND_PERCENT / 100 ))
+
+      if [ "$new_master_size" -gt "$MAX_SIZE_GI" ]; then
+        echo "[WARNING] New size ${new_master_size}Gi exceeds max ${MAX_SIZE_GI}Gi, capping at max"
+        new_master_size=$MAX_SIZE_GI
+      fi
+
+      if [ "$current_size" -lt "$MAX_SIZE_GI" ]; then
+        expand_pvc "querydb-master-pvc" "$current_size" "$new_master_size"
+        action_taken=true
+        set_shrink_count "querydb-master-pvc" "0"
+      else
+        echo "[WARNING] Already at max size, cannot expand"
+      fi
+
+    # 축소 체크 (10% 이하)
+    elif [ "$usage" -le "$SHRINK_THRESHOLD" ]; then
+      echo "[ACTION] Master usage <= ${SHRINK_THRESHOLD}%, checking shrink eligibility..."
+
+      shrink_count=$(get_shrink_count "querydb-master-pvc")
+      shrink_count=$((shrink_count + 1))
+      echo "Low usage count: $shrink_count/2"
+
+      if [ "$shrink_count" -ge 2 ]; then
+        new_master_size=$(( current_size * SHRINK_PERCENT / 100 ))
+
+        if [ "$new_master_size" -lt "$MIN_SIZE_GI" ]; then
+          echo "[WARNING] New size ${new_master_size}Gi below min ${MIN_SIZE_GI}Gi, setting to min"
+          new_master_size=$MIN_SIZE_GI
+        fi
+
+        if [ "$current_size" -gt "$MIN_SIZE_GI" ] && [ "$new_master_size" -lt "$current_size" ]; then
+          shrink_pvc "querydb-master-pvc" "querydb-master" "$current_size" "$new_master_size"
+          action_taken=true
+          set_shrink_count "querydb-master-pvc" "0"
+        else
+          echo "[INFO] Already at min size or cannot shrink"
+          set_shrink_count "querydb-master-pvc" "0"
+        fi
+      else
+        set_shrink_count "querydb-master-pvc" "$shrink_count"
+      fi
+
+    else
+      echo "[INFO] Master usage is normal (${usage}%), no action needed"
+      set_shrink_count "querydb-master-pvc" "0"
+    fi
+
+    # Replica PVC들을 Master와 동기화
+    sync_replica_pvcs "$new_master_size"
+
+    # 미사용 Replica PVC 삭제
+    cleanup_unused_replica_pvcs
+
+    # 기타 PVC (독립적으로 관리)
+    echo ""
+    echo "========================================="
+    echo "Checking ServerDB PVC"
+    echo "========================================="
+    process_pvc "serverdb-pvc" "app=serverdb" "/var/lib/mysql" "serverdb"
+
+    echo ""
+    echo "========================================"
+    echo "PVC AutoScaler Completed at $(date)"
+    echo "========================================"

@@ -1,0 +1,40 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pvc-autoscaler
+  namespace: default
+rules:
+  # PVC 관리 권한
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update", "patch", "create", "delete"]
+
+  # PVC status 확인 권한
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims/status"]
+    verbs: ["get"]
+
+  # Pod 관리 권한 (디스크 사용량 확인 및 재시작)
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "delete"]
+
+  # Pod exec 권한 (디스크 사용량 확인)
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+
+  # Deployment 관리 권한 (Pod 재시작)
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "patch"]
+
+  # ConfigMap 읽기 권한 (상태 저장용)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "create", "update", "patch"]
+
+  # 이벤트 생성 권한 (로깅)
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]

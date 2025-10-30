@@ -1,8 +1,9 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: querydb-replica
 spec:
+  serviceName: querydb-replica
   selector:
     matchLabels:
       app: querydb
@@ -178,6 +179,15 @@ spec:
               cpu: 2000m
               memory: 4Gi
 
-      volumes:
-        - name: querydb-data
-          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: querydb-data
+        labels:
+          app: querydb
+          role: replica
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
