@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: snapshot-creator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: snapshot-creator-role
+rules:
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshots"]
+    verbs: ["create", "delete", "get", "list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: snapshot-creator-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: snapshot-creator-role
+subjects:
+  - kind: ServiceAccount
+    name: snapshot-creator
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: querydb-snapshot-creator
+spec:
+  schedule: "*/10 * * * *"  # 10분마다
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: snapshot-creator
+          restartPolicy: OnFailure
+          containers:
+            - name: create-snapshot
+              image: bitnami/kubectl:latest
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  set -e
+
+                  echo "Creating snapshot at $(date)"
+
+                  # 최신 스냅샷 업데이트 (덮어쓰기)
+                  cat <<EOF | kubectl apply -f -
+                  apiVersion: snapshot.storage.k8s.io/v1
+                  kind: VolumeSnapshot
+                  metadata:
+                    name: querydb-master-snapshot-latest
+                  spec:
+                    volumeSnapshotClassName: querydb-snapshot-class
+                    source:
+                      persistentVolumeClaimName: querydb-master-pvc
+                  EOF
+
+                  echo "Waiting for snapshot to be ready..."
+                  kubectl wait --for=jsonpath='{.status.readyToUse}'=true \
+                    volumesnapshot/querydb-master-snapshot-latest \
+                    --timeout=300s
+
+                  echo "Snapshot ready!"

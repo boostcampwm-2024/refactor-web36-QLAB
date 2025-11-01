@@ -16,7 +16,7 @@ spec:
           - secretRef:
               name: qlab-secret
       nodeSelector:
-        ncloud.com/nks-nodepool: server-nodepool
+        ncloud.com/nks-nodepool: nodepool-server
   selector:
     matchLabels:
       app: apiserver

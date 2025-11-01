@@ -1,3 +1,5 @@
 resources:
   - primary-deployment.yaml
   - service.yaml
+  - volumesnapshotclass.yaml
+  - snapshot-cronjob.yaml

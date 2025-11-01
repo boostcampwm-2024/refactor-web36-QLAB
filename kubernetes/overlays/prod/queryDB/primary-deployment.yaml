@@ -15,7 +15,7 @@ spec:
         role: master
     spec:
       nodeSelector:
-        ncloud.com/nks-nodepool: master-nodepool
+        ncloud.com/nks-nodepool: nodepool-master
       containers:
         - name: querydb
           env:

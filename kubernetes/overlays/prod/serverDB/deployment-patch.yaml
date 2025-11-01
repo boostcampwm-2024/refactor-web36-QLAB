@@ -23,4 +23,4 @@ spec:
             - name: MYSQL_DATABASE
               value: qlabdb
       nodeSelector:
-        ncloud.com/nks-nodepool: server-nodepool
+        ncloud.com/nks-nodepool: nodepool-server

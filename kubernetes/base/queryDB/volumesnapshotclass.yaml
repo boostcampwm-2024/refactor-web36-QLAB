@@ -1,0 +1,8 @@
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: querydb-snapshot-class
+driver: blk.csi.ncloud.com
+deletionPolicy: Delete
+parameters:
+  type: "standard"

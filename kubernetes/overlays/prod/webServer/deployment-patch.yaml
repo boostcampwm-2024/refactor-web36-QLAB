@@ -11,4 +11,4 @@ spec:
         image: choco181/qlab-webserver:latest
         imagePullPolicy: Always
       nodeSelector:
-        ncloud.com/nks-nodepool: server-nodepool
+        ncloud.com/nks-nodepool: nodepool-server

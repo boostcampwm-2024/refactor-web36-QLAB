@@ -15,7 +15,7 @@ spec:
         role: replica
     spec:
       nodeSelector:
-        ncloud.com/nks-nodepool: nodepool
+        ncloud.com/nks-nodepool: nodepool-replica
 
       affinity:
         podAntiAffinity:
@@ -62,13 +62,7 @@ spec:
               SERVER_ID=$(echo $POD_IP | sed 's/\.//g')
               echo "Starting MySQL with server-id: $SERVER_ID from IP: $POD_IP"
 
-              # 초기 데이터 존재 여부 확인
-              DATA_EXISTS=false
-              if [ -f /var/lib/mysql/auto.cnf ]; then
-                echo "Existing data found, skipping clone"
-                DATA_EXISTS=true
-              fi
-
+              # VolumeSnapshot에서 복제된 데이터로 시작
               # MySQL 백그라운드 시작
               docker-entrypoint.sh mysqld \
                 --server-id=$SERVER_ID \
@@ -87,40 +81,7 @@ spec:
               done
               echo "MySQL is ready"
 
-              # 초기 데이터가 없으면 Clone 실행
-              if [ "$DATA_EXISTS" = false ]; then
-                echo "Cloning data from master..."
-                mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF
-              INSTALL PLUGIN clone SONAME 'mysql_clone.so';
-              SET GLOBAL clone_valid_donor_list = 'querydb-master:3306';
-              CLONE INSTANCE FROM 'clone_user'@'querydb-master':3306
-                IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
-              EOF
-
-                echo "Clone completed, restarting MySQL..."
-                kill $MYSQL_PID
-                wait $MYSQL_PID
-
-                # MySQL 재시작
-                docker-entrypoint.sh mysqld \
-                  --server-id=$SERVER_ID \
-                  --read-only=1 \
-                  --skip-log-bin \
-                  --local-infile=1 \
-                  --gtid-mode=ON \
-                  --enforce-gtid-consistency=ON &
-
-                MYSQL_PID=$!
-
-                # MySQL 준비 대기
-                echo "Waiting for MySQL to be ready after clone..."
-                until mysqladmin ping -h localhost --silent; do
-                  sleep 1
-                done
-                echo "MySQL is ready after clone"
-              fi
-
-              # Replication 설정 (clone 후에는 자동으로 설정되지만 명시적으로 재확인)
+              # Replication 설정 (VolumeSnapshot 이후 변경사항 동기화)
               echo "Setting up replication..."
               mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF
               CHANGE REPLICATION SOURCE TO
@@ -132,7 +93,8 @@ spec:
               START REPLICA;
               EOF
 
-              echo "Replication started"
+              echo "Replication started successfully"
+              echo "Data loaded from VolumeSnapshot, syncing with master via GTID..."
 
               # MySQL 프로세스 대기
               wait $MYSQL_PID
@@ -186,8 +148,12 @@ spec:
           app: querydb
           role: replica
       spec:
+        dataSource:
+          name: querydb-master-snapshot-latest
+          kind: VolumeSnapshot
+          apiGroup: snapshot.storage.k8s.io
         accessModes:
           - ReadWriteOnce
         resources:
           requests:
-            storage: 10Gi
+            storage: 100Gi  # 충분히 큰 값으로 설정 (스냅샷보다 크거나 같아야 함)

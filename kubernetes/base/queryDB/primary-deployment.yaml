@@ -41,16 +41,6 @@ spec:
               done
               echo "MySQL is ready"
 
-              # Clone Plugin 설치 및 사용자 생성 (이미 존재하면 무시)
-              mysql -h localhost -uroot -p"$MYSQL_ROOT_PASSWORD" <<EOF || true
-              INSTALL PLUGIN clone SONAME 'mysql_clone.so';
-              CREATE USER IF NOT EXISTS 'clone_user'@'%' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
-              GRANT BACKUP_ADMIN ON *.* TO 'clone_user'@'%';
-              FLUSH PRIVILEGES;
-              EOF
-
-              echo "Clone plugin configured"
-
               # MySQL 프로세스 대기
               wait $MYSQL_PID
           volumeMounts:
